@@ -1,103 +1,121 @@
-<script>
+<script lang="ts">
 	import { onMount } from 'svelte';
-	import { goto } from '$app/navigation';
-	import { authStore } from '$lib/stores/auth';
-	import { api } from '$lib/api';
-	import Navbar from '$lib/components/Navbar.svelte';
+	import ProblemCard from '$lib/components/ProblemCard.svelte';
+	import { problemsApi } from '$lib/api/client';
+	import type { Problem } from '$lib/types';
 
-	let problems = [];
+	let problems: Problem[] = [];
 	let loading = true;
-	let user = null;
-
-	authStore.subscribe(state => {
-		user = state.user;
-	});
+	let error: string | null = null;
+	let filter = 'all';
+	let searchQuery = '';
 
 	onMount(async () => {
-		if (!user) {
-			goto('/login');
-			return;
-		}
+		await loadProblems();
+	});
 
+	async function loadProblems() {
 		try {
-			problems = await api.getProblems();
-		} catch (error) {
-			console.error('Error loading problems:', error);
+			loading = true;
+			error = null;
+			problems = await problemsApi.getProblems();
+		} catch (err: any) {
+			error = err.message;
 		} finally {
 			loading = false;
 		}
-	});
-
-	const difficultyColors = {
-		'Easy': 'bg-green-100 text-green-800',
-		'Medium': 'bg-yellow-100 text-yellow-800',
-		'Hard': 'bg-red-100 text-red-800'
-	};
-
-	function navigateToProblem(problemId) {
-		goto(`/problems/${problemId}`);
 	}
+
+	$: filteredProblems = problems.filter(problem => {
+		const matchesFilter = filter === 'all' || problem.difficulty.toLowerCase() === filter;
+		const matchesSearch = problem.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+							  problem.description.toLowerCase().includes(searchQuery.toLowerCase());
+		return matchesFilter && matchesSearch;
+	});
 </script>
 
-<div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-	<Navbar />
-	<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-		<h1 class="text-4xl font-bold text-gray-800 mb-8">Problems</h1>
+<svelte:head>
+	<title>Problems - SkillNest</title>
+</svelte:head>
 
-		{#if loading}
-			<div class="text-center py-12">
-				<div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+<div>
+	<div class="mb-8">
+		<h1 class="text-4xl font-bold text-gray-900 mb-2">Coding Problems</h1>
+		<p class="text-gray-600">
+			Solve Data Structure & Algorithm problems in Python, Java, C, or C++
+		</p>
+	</div>
+
+	<!-- Filters and Search -->
+	<div class="bg-white p-4 rounded-lg shadow-sm mb-6">
+		<div class="flex flex-col md:flex-row gap-4 items-center justify-between">
+			<div class="flex gap-2">
+				<button
+					on:click={() => filter = 'all'}
+					class="px-4 py-2 rounded-md font-medium transition {filter === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
+				>
+					All
+				</button>
+				<button
+					on:click={() => filter = 'easy'}
+					class="px-4 py-2 rounded-md font-medium transition {filter === 'easy' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
+				>
+					Easy
+				</button>
+				<button
+					on:click={() => filter = 'medium'}
+					class="px-4 py-2 rounded-md font-medium transition {filter === 'medium' ? 'bg-yellow-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
+				>
+					Medium
+				</button>
+				<button
+					on:click={() => filter = 'hard'}
+					class="px-4 py-2 rounded-md font-medium transition {filter === 'hard' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
+				>
+					Hard
+				</button>
 			</div>
-		{:else if problems.length > 0}
-			<div class="bg-white rounded-lg shadow-md overflow-hidden">
-				<table class="min-w-full divide-y divide-gray-200">
-					<thead class="bg-gray-50">
-						<tr>
-							<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-								ID
-							</th>
-							<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-								Title
-							</th>
-							<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-								Difficulty
-							</th>
-							<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-								Action
-							</th>
-						</tr>
-					</thead>
-					<tbody class="bg-white divide-y divide-gray-200">
-						{#each problems as problem}
-							<tr class="hover:bg-gray-50 transition cursor-pointer" on:click={() => navigateToProblem(problem.id)}>
-								<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-									{problem.id}
-								</td>
-								<td class="px-6 py-4 text-sm text-gray-900">
-									{problem.title}
-								</td>
-								<td class="px-6 py-4 whitespace-nowrap">
-									<span class={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${difficultyColors[problem.difficulty]}`}>
-										{problem.difficulty}
-									</span>
-								</td>
-								<td class="px-6 py-4 whitespace-nowrap text-sm">
-									<button
-										on:click|stopPropagation={() => navigateToProblem(problem.id)}
-										class="text-indigo-600 hover:text-indigo-900 font-semibold"
-									>
-										Solve →
-									</button>
-								</td>
-							</tr>
-						{/each}
-					</tbody>
-				</table>
+
+			<div class="w-full md:w-auto">
+				<input
+					type="text"
+					bind:value={searchQuery}
+					placeholder="Search problems..."
+					class="w-full md:w-64 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+				/>
 			</div>
-		{:else}
-			<div class="bg-white rounded-lg shadow-md p-12 text-center">
-				<p class="text-gray-500 text-lg">No problems available yet.</p>
-			</div>
-		{/if}
+		</div>
+	</div>
+
+	<!-- Problems Grid -->
+	{#if loading}
+		<div class="flex justify-center items-center py-12">
+			<div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+		</div>
+	{:else if error}
+		<div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+			<p class="font-medium">Error loading problems</p>
+			<p class="text-sm">{error}</p>
+			<button
+				on:click={loadProblems}
+				class="mt-2 text-sm underline hover:no-underline"
+			>
+				Try again
+			</button>
+		</div>
+	{:else if filteredProblems.length === 0}
+		<div class="text-center py-12 text-gray-500">
+			<p class="text-lg">No problems found</p>
+		</div>
+	{:else}
+		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+			{#each filteredProblems as problem (problem.id)}
+				<ProblemCard {problem} />
+			{/each}
+		</div>
+	{/if}
+
+	<div class="mt-8 text-center text-sm text-gray-500">
+		Showing {filteredProblems.length} of {problems.length} problems
 	</div>
 </div>

@@ -1,242 +1,243 @@
-# ⚡ Quick Start Guide
+# SkillNest Quick Start Guide
 
-Get SkillNest running in 5 minutes!
+Get SkillNest up and running in less than 5 minutes!
 
-## Prerequisites Checklist
+## Prerequisites
 
-- [ ] Python 3.11+ installed
-- [ ] Node.js 20+ installed
-- [ ] Docker Desktop running
-- [ ] Ollama installed
+✅ Docker Desktop installed and running  
+✅ That's it!
 
-## Step-by-Step Setup
+## Installation
 
-### 1. Start PostgreSQL (30 seconds)
+### Windows
 
-```powershell
-cd "C:\Users\Tanveer\Vs Code\Skill Nest"
-docker-compose up -d
-```
+1. **Clone or download the project**
+   ```powershell
+   git clone <repository-url>
+   cd skillnest
+   ```
 
-### 2. Backend Setup (2 minutes)
+2. **Run the setup script**
+   ```powershell
+   .\setup.bat
+   ```
 
-```powershell
-cd backend
+3. **Wait for setup to complete** (2-3 minutes)
 
-# Create virtual environment
-python -m venv venv
-.\venv\Scripts\activate
+4. **Open your browser**
+   - Frontend: http://localhost:5173
+   - API Docs: http://localhost:8000/docs
 
-# Install dependencies
-pip install -r requirements.txt
+### Linux/macOS
 
-# Copy environment file
-copy .env.example .env
+1. **Clone or download the project**
+   ```bash
+   git clone <repository-url>
+   cd skillnest
+   ```
 
-# Seed database (creates admin user + 10 problems)
-python scripts\seed.py
+2. **Run the setup script**
+   ```bash
+   chmod +x setup.sh
+   ./setup.sh
+   ```
 
-# Start backend
-uvicorn app.main:app --reload
-```
+3. **Wait for setup to complete** (2-3 minutes)
 
-✅ Backend running at: http://localhost:8000
+4. **Open your browser**
+   - Frontend: http://localhost:5173
+   - API Docs: http://localhost:8000/docs
 
-### 3. Setup Ollama Models (1 minute)
+## Demo Credentials
 
-Open a new PowerShell terminal:
+### Admin Account
+- **Email:** admin@skillnest.com
+- **Password:** admin123
+- **Access:** Full platform access + admin dashboard
 
-```powershell
-ollama pull llama3.2:3b-instruct-q4_K_M
-ollama pull nomic-embed-text
-```
+### User Account
+- **Email:** user@test.com
+- **Password:** user123
+- **Access:** Problem solving and submissions
 
-### 4. Frontend Setup (90 seconds)
+## First Steps
 
-Open a new PowerShell terminal:
+1. **Browse Problems (No Login Required)**
+   - Visit http://localhost:5173/problems
+   - View all 6 DSA problems
+   - See difficulty levels and test cases
 
-```powershell
-cd "C:\Users\Tanveer\Vs Code\Skill Nest\frontend"
+2. **Try Anonymous Features**
+   - View leaderboard
+   - Browse problem statements
+   - Check test cases
 
-# Install dependencies
-npm install
+3. **Login and Submit Code**
+   - Click "Login" in top right
+   - Use demo credentials
+   - Select a problem
+   - Choose your language (Python, Java, C, C++)
+   - Write code in Monaco Editor
+   - Submit and see real-time results
 
-# Start frontend
-npm run dev
-```
+4. **Check Dashboard**
+   - View your stats
+   - See recent submissions
+   - Track acceptance rate
 
-✅ Frontend running at: http://localhost:5173
+5. **Admin Dashboard (Admin Only)**
+   - Login as admin
+   - Click "Admin" in navigation
+   - View platform statistics
+   - See most attempted problems
+   - Check language usage
 
-### 5. Pull Docker Images for Code Execution
+## Available Problems
 
-Open a new PowerShell terminal:
+1. **Two Sum** (Easy) - Array manipulation
+2. **Valid Parentheses** (Easy) - Stack operations
+3. **Reverse Linked List** (Easy) - Linked list operations
+4. **Binary Search** (Easy) - Search algorithms
+5. **Merge Sorted Arrays** (Medium) - Array merging
+6. **Longest Substring** (Medium) - String algorithms
 
-```powershell
-docker pull python:3.11-slim
-docker pull node:20-slim
-docker pull gcc:13
-docker pull openjdk:17-slim
-```
+## Language Support
 
-## Test It Out!
-
-### Test Admin Access
-
-1. Go to http://localhost:5173/admin/login
-2. Login with:
-   - Email: `admin@skillnest.com`
-   - Password: `admin123`
-3. View the admin dashboard
-
-### Test User Flow
-
-1. Go to http://localhost:5173/register
-2. Create a new account
-3. Browse problems at `/problems`
-4. Click on "Two Sum" problem
-5. Write this Python solution:
-
+### Python
 ```python
-def two_sum(nums, target):
-    seen = {}
-    for i, num in enumerate(nums):
-        if target - num in seen:
-            return [seen[target - num], i]
-        seen[num] = i
-    return []
+def solution():
+    # Your code here
+    pass
 
-print(two_sum([2, 7, 11, 15], 9))
+if __name__ == "__main__":
+    solution()
 ```
 
-6. Click "Submit Solution"
-7. See verdict: **Accepted** ✅
-8. Your score increased by 10 points!
+### Java
+```java
+public class Solution {
+    public static void main(String[] args) {
+        // Your code here
+    }
+}
+```
 
-## Verify Everything is Working
+### C
+```c
+#include <stdio.h>
 
-Check these URLs:
+int main() {
+    // Your code here
+    return 0;
+}
+```
 
-- ✅ Frontend: http://localhost:5173
-- ✅ Backend: http://localhost:8000
-- ✅ API Docs: http://localhost:8000/docs
-- ✅ Health Check: http://localhost:8000/health
+### C++
+```cpp
+#include <iostream>
+using namespace std;
 
-## Common Issues
+int main() {
+    // Your code here
+    return 0;
+}
+```
 
-### "Connection refused" on PostgreSQL
-```powershell
-# Check if container is running
-docker ps
+## Features to Try
 
-# If not, start it
+### 🔒 Secure Execution
+- All code runs in isolated Docker containers
+- Network access disabled
+- Memory and CPU limits enforced
+- Safe from malicious code
+
+### 🤖 AI Analysis
+- Automatic complexity estimation
+- Security vulnerability detection
+- Real-time feedback
+
+### 🏆 Leaderboard
+- Sort by problems solved
+- Sort by time complexity
+- Sort by space complexity
+- Real-time rankings
+
+### 📊 Analytics
+- Personal dashboard
+- Submission history
+- Acceptance rate tracking
+- Language usage stats
+
+## Common Commands
+
+### Start Services
+```bash
 docker-compose up -d
 ```
 
-### Ollama model not found
-```powershell
-# Check installed models
-ollama list
-
-# If missing, pull them
-ollama pull llama3.2:3b-instruct-q4_K_M
-ollama pull nomic-embed-text
+### Stop Services
+```bash
+docker-compose down
 ```
 
-### Monaco Editor not loading
-```powershell
-cd frontend
-rm -rf node_modules
-npm install
+### View Logs
+```bash
+docker-compose logs -f
 ```
 
-### Docker execution failing
-```powershell
-# Make sure Docker Desktop is running
-# Then pull the language images again
+### Restart Services
+```bash
+docker-compose restart
+```
+
+### Reset Everything
+```bash
+docker-compose down -v
+./setup.sh  # or setup.bat on Windows
+```
+
+## Troubleshooting
+
+### Can't access the site?
+```bash
+# Check if services are running
+docker-compose ps
+
+# Restart services
+docker-compose restart
+```
+
+### Code execution fails?
+```bash
+# Pull Docker images
 docker pull python:3.11-slim
+docker pull openjdk:17-slim
+docker pull gcc:13-alpine
 ```
+
+### Database issues?
+```bash
+# Reset database
+docker-compose down -v
+docker-compose up -d postgres redis
+cd backend
+python seed.py
+```
+
+## Need Help?
+
+- 📖 Read the full [README.md](README.md)
+- 🐛 Check [GitHub Issues](https://github.com/your-repo/issues)
+- 💬 Join our community chat
 
 ## What's Next?
 
-- Try different languages (Python, JavaScript, C++, Java)
-- Solve all 10 sample problems
-- Check the leaderboard
-- View your submission history
-- Create new problems (as admin)
-- Explore the admin dashboard analytics
-
-## Architecture Overview
-
-```
-┌─────────────────────────────────────────────────────┐
-│                    User / Admin                      │
-└───────────────────────┬─────────────────────────────┘
-                        │
-                        ▼
-┌─────────────────────────────────────────────────────┐
-│              SvelteKit Frontend                      │
-│  (Monaco Editor, TailwindCSS, Svelte Stores)        │
-└───────────────────────┬─────────────────────────────┘
-                        │ HTTP/REST
-                        ▼
-┌─────────────────────────────────────────────────────┐
-│               FastAPI Backend                        │
-│  ┌──────────────────────────────────────────────┐  │
-│  │  Auth │ Problems │ Submissions │ Admin       │  │
-│  └──────────────────────────────────────────────┘  │
-│  ┌──────────────────────────────────────────────┐  │
-│  │  RAG Service    │   Execution Service        │  │
-│  │  (Ollama+Chroma)│   (Docker Sandbox)        │  │
-│  └──────────────────────────────────────────────┘  │
-└─────────┬────────────────────────────┬──────────────┘
-          │                            │
-          ▼                            ▼
-┌──────────────────┐        ┌──────────────────────┐
-│   PostgreSQL     │        │   Docker Engine      │
-│   (User Data)    │        │   (Code Execution)   │
-└──────────────────┘        └──────────────────────┘
-```
-
-## Key Features Implemented
-
-✅ **User System**
-- JWT authentication
-- Role-based access (user/admin)
-- Score tracking
-- Submission history
-
-✅ **Code Execution**
-- Multi-language support
-- Docker sandboxing
-- Resource limits
-- Multiple verdicts
-
-✅ **AI Integration**
-- RAG-based language detection
-- Ollama LLM
-- ChromaDB vector store
-
-✅ **Admin Dashboard**
-- User analytics
-- Submission metrics
-- Language usage stats
-- Problem analytics
-
-✅ **Security**
-- Rate limiting
-- Input validation
-- Isolated execution
-- JWT expiration
-
-## Support
-
-Check the main [README.md](README.md) for:
-- Full API documentation
-- Detailed architecture
-- Advanced configuration
-- Troubleshooting guide
-- Production deployment
+- Try solving all 6 problems
+- Compete on the leaderboard
+- Test different languages
+- Explore the admin dashboard (if admin)
+- Check the API documentation at http://localhost:8000/docs
 
 ---
 
-**Happy Coding! 🚀**
+Happy Coding! 🚀

@@ -4,40 +4,32 @@ from functools import lru_cache
 
 class Settings(BaseSettings):
     # Database
-    DATABASE_URL: str = "postgresql+asyncpg://Tanveer:Tanveer@4321**@localhost:5432/skillnest"
+    DATABASE_URL: str = "postgresql+asyncpg://skillnest:skillnest123@postgres:5432/skillnest"
+    
+    # Redis
+    REDIS_URL: str = "redis://redis:6379/0"
     
     # JWT
-    SECRET_KEY: str = "your-secret-key-change-in-production"
+    SECRET_KEY: str = "your-secret-key-change-this-in-production"
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440  # 24 hours
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     
-    # App
-    DEBUG: bool = True
-    API_V1_PREFIX: str = "/api/v1"
-    
-    # RAG
-    OLLAMA_BASE_URL: str = "http://localhost:11434"
-    OLLAMA_MODEL: str = "llama3.2:3b-instruct-q4_K_M"
-    EMBED_MODEL: str = "nomic-embed-text"
-    CHROMA_PERSIST_DIR: str = "./chroma_db"
-    
-    # Docker Execution
-    DOCKER_MEMORY_LIMIT: str = "256m"
-    DOCKER_CPU_LIMIT: float = 0.5
-    EXECUTION_TIMEOUT: int = 2  # seconds
-    MAX_CODE_SIZE: int = 50000  # bytes
+    # AI Service
+    AI_API_KEY: str = ""
+    AI_API_URL: str = "https://api.openai.com/v1/chat/completions"
     
     # Rate Limiting
-    RATE_LIMIT_SUBMISSIONS: str = "10/minute"
+    RATE_LIMIT_SUBMISSIONS: int = 30  # per minute
+    
+    # Execution Limits
+    DEFAULT_TIME_LIMIT: int = 5  # seconds
+    DEFAULT_MEMORY_LIMIT: int = 256  # MB
     
     class Config:
         env_file = ".env"
-        case_sensitive = True
 
 
 @lru_cache()
-def get_settings():
+def get_settings() -> Settings:
     return Settings()
-
-
-settings = get_settings()

@@ -1,1 +1,1 @@
-# Backend module initialization
+# Backend application package

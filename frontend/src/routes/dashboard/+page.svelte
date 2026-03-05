@@ -1,135 +1,175 @@
-<script>
+<script lang="ts">
 	import { onMount } from 'svelte';
+	import { authStore } from '$lib/stores/authStore';
 	import { goto } from '$app/navigation';
-	import { authStore } from '$lib/stores/auth';
-	import { api } from '$lib/api';
-	import Navbar from '$lib/components/Navbar.svelte';
-	import LeaderboardTable from '$lib/components/LeaderboardTable.svelte';
+	import { submissionsApi } from '$lib/api/client';
+	import type { Submission } from '$lib/types';
 
-	let user = null;
-	let submissions = [];
-	let leaderboard = [];
+	let submissions: Submission[] = [];
 	let loading = true;
-
-	authStore.subscribe(state => {
-		user = state.user;
-	});
+	let stats = {
+		totalSubmissions: 0,
+		acceptedSubmissions: 0,
+		problemsSolved: 0,
+		acceptanceRate: 0
+	};
 
 	onMount(async () => {
-		if (!user) {
+		if (!$authStore.isAuthenticated) {
 			goto('/login');
 			return;
 		}
+		
+		await loadDashboard();
+	});
 
+	async function loadDashboard() {
 		try {
-			const [submissionsData, leaderboardData] = await Promise.all([
-				api.getMySubmissions(),
-				api.getLeaderboard()
-			]);
-
-			submissions = submissionsData.slice(0, 5);
-			leaderboard = leaderboardData.slice(0, 10);
+			loading = true;
+			submissions = await submissionsApi.getSubmissions();
+			
+			// Calculate stats
+			stats.totalSubmissions = submissions.length;
+			stats.acceptedSubmissions = submissions.filter(s => s.verdict === 'Accepted').length;
+			
+			// Count unique problem IDs with accepted verdicts
+			const solvedProblems = new Set(
+				submissions
+					.filter(s => s.verdict === 'Accepted')
+					.map(s => s.problem_id)
+			);
+			stats.problemsSolved = solvedProblems.size;
+			
+			stats.acceptanceRate = stats.totalSubmissions > 0
+				? Math.round((stats.acceptedSubmissions / stats.totalSubmissions) * 100)
+				: 0;
 		} catch (error) {
 			console.error('Error loading dashboard:', error);
 		} finally {
 			loading = false;
 		}
-	});
+	}
 
-	const verdictColors = {
-		'Accepted': 'text-green-600',
-		'Wrong Answer': 'text-red-600',
-		'Runtime Error': 'text-orange-600',
-		'Time Limit Exceeded': 'text-yellow-600',
-		'Memory Limit Exceeded': 'text-purple-600'
-	};
+	function getVerdictColor(verdict: string): string {
+		switch (verdict) {
+			case 'Accepted':
+				return 'text-green-600 bg-green-50';
+			case 'Wrong Answer':
+				return 'text-yellow-600 bg-yellow-50';
+			default:
+				return 'text-red-600 bg-red-50';
+		}
+	}
+
+	function formatDate(dateStr: string): string {
+		const date = new Date(dateStr);
+		return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+	}
 </script>
 
-<div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-	<Navbar />
-	<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<svelte:head>
+	<title>Dashboard - SkillNest</title>
+</svelte:head>
+
+{#if loading}
+	<div class="flex justify-center items-center py-12">
+		<div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+	</div>
+{:else}
+	<div>
 		<div class="mb-8">
-			<h1 class="text-4xl font-bold text-gray-800">Dashboard</h1>
-			{#if user}
-				<p class="text-gray-600 mt-2">Welcome back, {user.email}!</p>
-				<p class="text-lg font-semibold text-indigo-600 mt-1">Score: {user.score} points</p>
-			{/if}
+			<h1 class="text-4xl font-bold text-gray-900 mb-2">My Dashboard</h1>
+			<p class="text-gray-600">
+				Welcome back, {$authStore.user?.email}
+			</p>
 		</div>
 
-		{#if loading}
-			<div class="text-center py-12">
-				<div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+		<!-- Stats Grid -->
+		<div class="grid md:grid-cols-4 gap-6 mb-8">
+			<div class="bg-white p-6 rounded-lg shadow-sm">
+				<div class="text-sm font-medium text-gray-600 mb-1">Total Submissions</div>
+				<div class="text-3xl font-bold text-blue-600">{stats.totalSubmissions}</div>
 			</div>
-		{:else}
-			<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-				<!-- Recent Submissions -->
-				<div class="bg-white rounded-lg shadow-md p-6">
-					<div class="flex justify-between items-center mb-4">
-						<h2 class="text-2xl font-bold text-gray-800">Recent Submissions</h2>
-						<a href="/problems" class="text-indigo-600 hover:text-indigo-800 font-semibold">
-							View All →
-						</a>
-					</div>
 
-					{#if submissions.length > 0}
-						<div class="space-y-3">
-							{#each submissions as submission}
-								<div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
-									<div class="flex justify-between items-start">
-										<div>
-											<p class="font-semibold text-gray-800">Problem #{submission.problem_id}</p>
-											<p class="text-sm text-gray-600 capitalize">{submission.detected_language || 'Unknown'}</p>
-										</div>
-										<span class={`font-semibold ${verdictColors[submission.verdict] || 'text-gray-600'}`}>
+			<div class="bg-white p-6 rounded-lg shadow-sm">
+				<div class="text-sm font-medium text-gray-600 mb-1">Accepted</div>
+				<div class="text-3xl font-bold text-green-600">{stats.acceptedSubmissions}</div>
+			</div>
+
+			<div class="bg-white p-6 rounded-lg shadow-sm">
+				<div class="text-sm font-medium text-gray-600 mb-1">Problems Solved</div>
+				<div class="text-3xl font-bold text-purple-600">{stats.problemsSolved}</div>
+			</div>
+
+			<div class="bg-white p-6 rounded-lg shadow-sm">
+				<div class="text-sm font-medium text-gray-600 mb-1">Acceptance Rate</div>
+				<div class="text-3xl font-bold text-indigo-600">{stats.acceptanceRate}%</div>
+			</div>
+		</div>
+
+		<!-- Recent Submissions -->
+		<div class="bg-white rounded-lg shadow-sm">
+			<div class="p-6 border-b border-gray-200">
+				<h2 class="text-2xl font-bold text-gray-900">Recent Submissions</h2>
+			</div>
+
+			{#if submissions.length === 0}
+				<div class="p-8 text-center text-gray-500">
+					<p class="mb-4">No submissions yet</p>
+					<a
+						href="/problems"
+						class="inline-block bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition"
+					>
+						Start Solving Problems
+					</a>
+				</div>
+			{:else}
+				<div class="overflow-x-auto">
+					<table class="min-w-full divide-y divide-gray-200">
+						<thead class="bg-gray-50">
+							<tr>
+								<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+								<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Problem</th>
+								<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Language</th>
+								<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Verdict</th>
+								<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Runtime</th>
+								<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+							</tr>
+						</thead>
+						<tbody class="bg-white divide-y divide-gray-200">
+							{#each submissions.slice(0, 20) as submission}
+								<tr class="hover:bg-gray-50">
+									<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+										#{submission.id}
+									</td>
+									<td class="px-6 py-4 whitespace-nowrap text-sm">
+										<a
+											href="/problems/{submission.problem_id}"
+											class="text-blue-600 hover:underline"
+										>
+											Problem #{submission.problem_id}
+										</a>
+									</td>
+									<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+										{submission.language.toUpperCase()}
+									</td>
+									<td class="px-6 py-4 whitespace-nowrap">
+										<span class="px-2 py-1 text-xs font-semibold rounded {getVerdictColor(submission.verdict)}">
 											{submission.verdict}
 										</span>
-									</div>
-									<p class="text-xs text-gray-500 mt-2">
-										{new Date(submission.created_at).toLocaleDateString()}
-									</p>
-								</div>
+									</td>
+									<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+										{submission.runtime ? `${submission.runtime.toFixed(2)} ms` : '-'}
+									</td>
+									<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+										{formatDate(submission.created_at)}
+									</td>
+								</tr>
 							{/each}
-						</div>
-					{:else}
-						<p class="text-gray-500 text-center py-8">No submissions yet. Start solving problems!</p>
-					{/if}
+						</tbody>
+					</table>
 				</div>
-
-				<!-- Leaderboard Preview -->
-				<div>
-					<LeaderboardTable users={leaderboard} />
-				</div>
-			</div>
-
-			<!-- Quick Actions -->
-			<div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-				<a
-					href="/problems"
-					class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition text-center border-2 border-transparent hover:border-indigo-600"
-				>
-					<div class="text-4xl mb-2">💻</div>
-					<h3 class="text-lg font-semibold text-gray-800">Solve Problems</h3>
-					<p class="text-sm text-gray-600 mt-2">Practice and improve your skills</p>
-				</a>
-
-				<a
-					href="/problems"
-					class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition text-center border-2 border-transparent hover:border-indigo-600"
-				>
-					<div class="text-4xl mb-2">📊</div>
-					<h3 class="text-lg font-semibold text-gray-800">View Progress</h3>
-					<p class="text-sm text-gray-600 mt-2">Track your submission history</p>
-				</a>
-
-				<a
-					href="/problems"
-					class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition text-center border-2 border-transparent hover:border-indigo-600"
-				>
-					<div class="text-4xl mb-2">🏆</div>
-					<h3 class="text-lg font-semibold text-gray-800">Compete</h3>
-					<p class="text-sm text-gray-600 mt-2">Climb the leaderboard</p>
-				</a>
-			</div>
-		{/if}
+			{/if}
+		</div>
 	</div>
-</div>
+{/if}

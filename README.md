@@ -1,246 +1,333 @@
-# SkillNest - Production-Grade Multi-Language Coding Platform
+# SkillNest - Multi-Language Coding Platform
 
-A complete LeetCode-style coding platform with AI-powered language detection, Docker-based code execution, and comprehensive admin analytics.
+<div align="center">
 
-## 🏗️ Architecture
+**A production-ready coding platform for solving Data Structure & Algorithm problems with Docker sandbox execution, AI code analysis, Redis caching, and dynamic leaderboards.**
 
-### Tech Stack
+[![Python](https://img.shields.io/badge/Python-3.11-blue.svg)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.109-green.svg)](https://fastapi.tiangolo.com/)
+[![SvelteKit](https://img.shields.io/badge/SvelteKit-2.0-orange.svg)](https://kit.svelte.dev/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://www.docker.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue.svg)](https://www.postgresql.org/)
+[![Redis](https://img.shields.io/badge/Redis-7-red.svg)](https://redis.io/)
 
-**Frontend:**
-- SvelteKit - Modern web framework
-- TailwindCSS - Utility-first styling
-- Monaco Editor - VS Code editor experience
-- Svelte Stores - State management
+</div>
 
-**Backend:**
-- FastAPI - High-performance Python API
-- PostgreSQL - Robust relational database
-- SQLAlchemy - Async ORM
-- JWT - Secure authentication
-- Docker - Isolated code execution
+---
 
-**AI/ML:**
-- Ollama (llama3.2:3b) - Language detection
-- ChromaDB - Vector database
-- RAG - Retrieval-Augmented Generation
+## 📋 Table of Contents
 
-## 📁 Project Structure
+- [Overview](#overview)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Architecture](#architecture)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Running the Application](#running-the-application)
+- [API Documentation](#api-documentation)
+- [Database Structure](#database-structure)
+- [Security Features](#security-features)
+- [Testing](#testing)
+- [Deployment](#deployment)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
+- [License](#license)
+
+---
+
+## 🎯 Overview
+
+SkillNest is a comprehensive coding platform designed for competitive programming and DSA practice. Users can:
+
+- Solve coding problems in **Python, Java, C, and C++**
+- Get **AI-powered code analysis** for security and complexity estimation
+- Execute code in **isolated Docker containers** with resource limits
+- View **real-time leaderboards** with multiple ranking options
+- Track personal progress through an **analytics dashboard**
+
+The platform supports anonymous browsing while requiring authentication for code submission.
+
+---
+
+## ✨ Features
+
+### 🔐 Authentication System
+- **JWT-based authentication** with access and refresh tokens
+- Access token expires in 15 minutes
+- Refresh token expires in 7 days (HttpOnly cookie)
+- Role-based access control (User / Admin)
+
+### 💻 Multi-Language Code Execution
+- Support for **Python, Java, C, C++**
+- Isolated Docker containers with:
+  - No network access
+  - CPU limit: 0.5 cores
+  - Memory limit: 256MB (configurable)
+  - PID limit: 64 processes
+  - Read-only filesystem
+  - Automatic timeout handling
+
+### 🤖 AI Code Analysis
+- Detects malicious patterns:
+  - System calls (exec, eval, subprocess)
+  - File operations
+  - Network requests
+  - Fork bombs
+  - Infinite loops
+- Estimates time and space complexity using AI (OpenAI API)
+- Fallback analysis when AI unavailable
+
+### 🏆 Dynamic Leaderboard System
+- **Multiple ranking criteria:**
+  - Total problems solved
+  - Best average time complexity
+  - Best average space complexity
+  - Number of submissions per problem
+- Complexity scoring:
+  - O(1) = 1, O(log n) = 2, O(n) = 3, O(n log n) = 4, O(n²) = 5
+- Real-time updates with Redis caching (5-minute TTL)
+
+### ⚡ Redis Integration
+- **Rate limiting:** 30 submissions per minute per user
+- **Caching:**
+  - Problem statements
+  - Test cases
+  - Leaderboard results
+  - AI analysis results
+- Future: Job queue for distributed execution
+
+### 📊 Admin Dashboard
+- Total user statistics
+- Submission metrics
+- Most attempted problems
+- Language usage distribution
+- Top performers leaderboard
+
+### 🎨 Modern Frontend
+- **SvelteKit** with TypeScript
+- **TailwindCSS** for styling
+- **Monaco Editor** for code editing
+- Fully responsive design
+- Real-time feedback
+- Anonymous browsing support
+
+---
+
+## 🛠 Tech Stack
+
+### Backend
+| Technology | Version | Purpose |
+|-----------|---------|---------|
+| **FastAPI** | 0.109 | Async REST API framework |
+| **SQLAlchemy** | 2.0 | Async ORM for database |
+| **PostgreSQL** | 15 | Primary database |
+| **Redis** | 7 | Caching & rate limiting |
+| **Docker SDK** | 7.0 | Container management |
+| **Pydantic** | 2.5 | Data validation |
+| **python-jose** | 3.3 | JWT handling |
+| **passlib** | 1.7 | Password hashing |
+
+### Frontend
+| Technology | Version | Purpose |
+|-----------|---------|---------|
+| **SvelteKit** | 2.0 | Frontend framework |
+| **TypeScript** | 5.3 | Type safety |
+| **TailwindCSS** | 3.4 | Styling |
+| **Monaco Editor** | 0.45 | Code editor |
+| **Vite** | 5.0 | Build tool |
+
+### Infrastructure
+- **Docker** & **Docker Compose** - Containerization
+- **PostgreSQL** - Persistent data storage
+- **Redis** - Caching layer
+- **Nginx** (optional) - Reverse proxy
+
+---
+
+## 🏗 Architecture
 
 ```
-Skill Nest/
-├── backend/
-│   ├── app/
-│   │   ├── models/          # SQLAlchemy models
-│   │   │   ├── user.py      # User model with roles
-│   │   │   ├── problem.py   # Problem model
-│   │   │   └── submission.py # Submission with indexes
-│   │   ├── schemas/         # Pydantic schemas
-│   │   │   ├── user.py
-│   │   │   ├── problem.py
-│   │   │   ├── submission.py
-│   │   │   └── admin.py     # Admin analytics schemas
-│   │   ├── routers/         # API endpoints
-│   │   │   ├── auth.py      # Authentication
-│   │   │   ├── problems.py  # Problem CRUD
-│   │   │   ├── submissions.py # Code submission
-│   │   │   └── admin.py     # Admin endpoints (protected)
-│   │   ├── services/        # Business logic
-│   │   │   ├── auth_service.py
-│   │   │   ├── submission_service.py
-│   │   │   ├── execution_service.py  # Docker executor
-│   │   │   ├── rag_service.py        # Language detection
-│   │   │   └── admin_service.py      # Analytics
-│   │   ├── utils/
-│   │   │   ├── security.py  # JWT & password hashing
-│   │   │   └── dependencies.py # Auth dependencies
-│   │   ├── config.py        # Settings management
-│   │   ├── database.py      # Async DB connection
-│   │   └── main.py          # FastAPI app
-│   ├── scripts/
-│   │   └── seed.py          # Database seeding
-│   ├── requirements.txt
-│   ├── Dockerfile
-│   └── .env.example
-│
-├── frontend/
-│   ├── src/
-│   │   ├── lib/
-│   │   │   ├── components/
-│   │   │   │   ├── CodeEditor.svelte       # Monaco editor
-│   │   │   │   ├── SubmissionResult.svelte
-│   │   │   │   ├── LeaderboardTable.svelte
-│   │   │   │   ├── AdminStatsCard.svelte
-│   │   │   │   └── Navbar.svelte
-│   │   │   ├── stores/
-│   │   │   │   └── auth.js  # Auth state management
-│   │   │   └── api.js       # API client
-│   │   ├── routes/
-│   │   │   ├── +page.svelte              # Home
-│   │   │   ├── login/+page.svelte
-│   │   │   ├── register/+page.svelte
-│   │   │   ├── dashboard/+page.svelte
-│   │   │   ├── problems/
-│   │   │   │   ├── +page.svelte          # Problem list
-│   │   │   │   └── [id]/+page.svelte     # Problem solver
-│   │   │   └── admin/
-│   │   │       ├── +layout.js            # Admin guard
-│   │   │       ├── login/+page.svelte
-│   │   │       └── dashboard/+page.svelte
-│   │   └── app.css          # Tailwind imports
-│   ├── package.json
-│   ├── svelte.config.js
-│   ├── tailwind.config.js
-│   └── Dockerfile
-│
-└── docker-compose.yml       # PostgreSQL service
+┌─────────────────┐
+│                 │
+│   SvelteKit     │
+│   Frontend      │◄─────┐
+│                 │      │
+└────────┬────────┘      │
+         │               │
+         │ HTTP/REST     │
+         │               │
+┌────────▼────────┐      │
+│                 │      │
+│   FastAPI       │      │
+│   Backend       │      │
+│                 │      │
+└────┬─────┬──────┘      │
+     │     │             │
+     │     │             │
+┌────▼──┐ ┌▼────────┐   │
+│       │ │         │   │
+│ PostgreSQL│ Redis │   │
+│       │ │         │   │
+└───────┘ └─────────┘   │
+     │                  │
+     │                  │
+┌────▼──────────────┐   │
+│                   │   │
+│  Docker Engine    │   │
+│  (Code Execution) │───┘
+│                   │
+└───────────────────┘
 ```
 
-## 🚀 Features
+### Request Flow
 
-### User Features
-- ✅ User registration and JWT authentication
-- ✅ Browse coding problems by difficulty
-- ✅ Monaco code editor with syntax highlighting
-- ✅ Multi-language support (Python, C++, Java, JavaScript)
-- ✅ AI-powered language detection using RAG
-- ✅ Real-time code execution in isolated Docker containers
-- ✅ Submission history tracking
-- ✅ Score-based leaderboard
-- ✅ Responsive UI with TailwindCSS
+1. **User submits code** → Frontend (SvelteKit)
+2. **JWT validation** → FastAPI middleware
+3. **Rate limit check** → Redis
+4. **AI analysis** → External AI API (optional)
+5. **Code execution** → Docker container
+6. **Result storage** → PostgreSQL
+7. **Cache update** → Redis
+8. **Response** → Frontend
 
-### Admin Features
-- ✅ Role-based access control
-- ✅ Protected admin dashboard
-- ✅ **Analytics:**
-  - Total users count
-  - Total submissions
-  - Acceptance rate
-  - Daily submission count
-  - Top 20 users by score
-  - Most attempted problems
-  - Language usage statistics
-- ✅ Problem management (create problems)
+---
 
-### Security Features
-- ✅ JWT authentication with role verification
-- ✅ Password hashing with bcrypt
-- ✅ Rate limiting (10 submissions/minute)
-- ✅ Input size validation (50KB max)
-- ✅ Isolated Docker execution (no network, resource limits)
-- ✅ Non-root container execution
-- ✅ Proper error handling
+## 📦 Prerequisites
 
-### Code Execution
-- ✅ Docker-based sandboxing
-- ✅ Memory limit: 256MB
-- ✅ CPU limit: 0.5 cores
-- ✅ Timeout: 2 seconds
-- ✅ Network isolation
-- ✅ Automatic cleanup
-- ✅ Multiple verdicts:
-  - Accepted
-  - Wrong Answer
-  - Runtime Error
-  - Time Limit Exceeded
-  - Memory Limit Exceeded
+### Required Software
+- **Docker** (20.10+) and **Docker Compose** (2.0+)
+- **Python** 3.11+ (for local development)
+- **Node.js** 20+ (for frontend development)
+- **Git**
 
-### Scoring System
-- Easy: +10 points
-- Medium: +20 points
-- Hard: +40 points
-- First-solve only (no duplicate points)
+### Optional
+- **OpenAI API Key** (for AI code analysis)
+- **Kubernetes** (for production scaling)}
 
-## 🛠️ Setup Instructions
+---
 
-### Prerequisites
+## 🚀 Installation
+
+### 1. Clone the Repository
 
 ```bash
-# Required
-- Python 3.11+
-- Node.js 20+
-- Docker Desktop
-- PostgreSQL 15
-- Git
-
-# Install Ollama (for RAG)
-# Windows: Download from https://ollama.ai
-# Linux/Mac:
-curl -fsSL https://ollama.com/install.sh | sh
+git clone <repository-url>
+cd skillnest
 ```
 
-### 1. Clone and Setup
+### 2. Set Up Environment Variables
 
 ```bash
-cd "C:\Users\Tanveer\Vs Code\Skill Nest"
+# Copy example env file
+cp backend/.env.example backend/.env
+
+# Edit backend/.env with your configuration
+SECRET_KEY=your-secret-key-min-32-characters-long
+AI_API_KEY=your-openai-api-key  # Optional
 ```
 
-### 2. Backend Setup
+### 3. Pull Docker Images
+
+```bash
+# Backend will automatically pull these on first run
+docker pull python:3.11-slim
+docker pull openjdk:17-slim
+docker pull gcc:13-alpine
+```
+
+---
+
+## ⚙️ Configuration
+
+### Backend Configuration (`backend/.env`)
+
+```env
+# Database
+DATABASE_URL=postgresql+asyncpg://skillnest:skillnest123@localhost:5432/skillnest_db
+
+# Redis
+REDIS_URL=redis://localhost:6379/0
+
+# JWT
+SECRET_KEY=your-secret-key-change-this-in-production-min-32-characters-long
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=15
+REFRESH_TOKEN_EXPIRE_DAYS=7
+
+# AI Service (Optional)
+AI_API_KEY=sk-...your-openai-key
+AI_API_URL=https://api.openai.com/v1/chat/completions
+
+# Rate Limiting
+RATE_LIMIT_SUBMISSIONS=30
+
+# Execution Limits
+DEFAULT_TIME_LIMIT=5
+DEFAULT_MEMORY_LIMIT=256
+```
+
+### Frontend Configuration
+
+The frontend uses environment variables prefixed with `PUBLIC_`:
+
+```env
+PUBLIC_API_URL=http://localhost:8000
+```
+
+---
+
+## 🏃 Running the Application
+
+### Option 1: Using Docker Compose (Recommended)
+
+```bash
+# Start all services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop all services
+docker-compose down
+```
+
+Services will be available at:
+- **Frontend:** http://localhost:5173
+- **Backend API:** http://localhost:8000
+- **API Docs:** http://localhost:8000/docs
+
+### Option 2: Local Development
+
+#### Backend
 
 ```bash
 cd backend
 
 # Create virtual environment
 python -m venv venv
-.\venv\Scripts\activate  # Windows
-# source venv/bin/activate  # Linux/Mac
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
 
-# Configure environment
-copy .env.example .env
-# Edit .env with your settings
+# Start Docker-based services
+docker-compose up -d postgres redis
 
-# Start PostgreSQL
-cd ..
-docker-compose up -d
+# Run database migrations (create tables)
+python -c "from app.database import init_db; import asyncio; asyncio.run(init_db())"
 
-# Initialize database and seed data
-cd backend
-python scripts/seed.py
-```
+# Seed database with initial problems
+python seed.py
 
-**Database will be seeded with:**
-- Admin user: `admin@skillnest.com` / `admin123`
-- 10 sample coding problems
-
-### 3. Setup Ollama Models
-
-```bash
-# Pull required models
-ollama pull llama3.2:3b-instruct-q4_K_M
-ollama pull nomic-embed-text
-
-# Verify models
-ollama list
-```
-
-### 4. Pull Docker Images for Execution
-
-```bash
-docker pull python:3.11-slim
-docker pull gcc:13
-docker pull openjdk:17-slim
-docker pull node:20-slim
-```
-
-### 5. Start Backend
-
-```bash
-cd backend
-.\venv\Scripts\activate
+# Start FastAPI server
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-Backend will run at: `http://localhost:8000`
-API docs: `http://localhost:8000/docs`
-
-### 6. Frontend Setup
-
-Open a new terminal:
+#### Frontend
 
 ```bash
-cd "C:\Users\Tanveer\Vs Code\Skill Nest\frontend"
+cd frontend
 
 # Install dependencies
 npm install
@@ -249,306 +336,459 @@ npm install
 npm run dev
 ```
 
-Frontend will run at: `http://localhost:5173`
+---
 
-## 📚 API Endpoints
+## 📚 API Documentation
 
-### Authentication
-```
-POST   /api/v1/auth/register    - Register new user
-POST   /api/v1/auth/login       - Login user
-GET    /api/v1/auth/me          - Get current user
-```
+### Authentication Endpoints
 
-### Problems
-```
-GET    /api/v1/problems         - List all problems
-GET    /api/v1/problems/{id}    - Get problem details
-POST   /api/v1/problems         - Create problem (admin)
-GET    /api/v1/problems/leaderboard - Get leaderboard
-```
+#### POST `/auth/register`
+Create a new user account.
 
-### Submissions
-```
-POST   /api/v1/submissions      - Submit code (rate limited)
-GET    /api/v1/submissions/my-submissions - Get user history
-GET    /api/v1/submissions/{id} - Get submission details
-```
-
-### Admin (Protected)
-```
-GET    /api/v1/admin/top-users         - Top 20 users
-GET    /api/v1/admin/stats             - Platform statistics
-GET    /api/v1/admin/language-usage    - Language breakdown
-GET    /api/v1/admin/problem-analytics - Most attempted problems
-```
-
-All admin routes require:
-- Valid JWT token
-- User role = "admin"
-- Returns 403 if not admin
-
-## 🔐 Default Credentials
-
-**Admin Account:**
-- Email: `admin@skillnest.com`
-- Password: `admin123`
-
-**Test User:**
-You can register any new user through the UI.
-
-## 🎯 Usage Guide
-
-### As a User:
-
-1. **Register** at `/register`
-2. **Login** at `/login`
-3. **Browse problems** at `/problems`
-4. **Solve a problem:**
-   - Click on any problem
-   - Write code in the Monaco editor
-   - Select language (auto-detected via RAG)
-   - Submit solution
-   - View result instantly
-5. **Check leaderboard** on dashboard
-6. **View submission history** on dashboard
-
-### As an Admin:
-
-1. **Login** at `/admin/login` with admin credentials
-2. **View dashboard** with:
-   - User statistics
-   - Submission metrics
-   - Acceptance rates
-   - Top performers
-   - Problem analytics
-   - Language usage
-3. **Create problems** via API or extend UI
-
-## 🧪 Testing the System
-
-### Test Code Submission
-
-**Python Example:**
-```python
-def two_sum(nums, target):
-    seen = {}
-    for i, num in enumerate(nums):
-        if target - num in seen:
-            return [seen[target - num], i]
-        seen[num] = i
-    return []
-
-print(two_sum([2, 7, 11, 15], 9))
-```
-
-**JavaScript Example:**
-```javascript
-function twoSum(nums, target) {
-    const seen = {};
-    for (let i = 0; i < nums.length; i++) {
-        const complement = target - nums[i];
-        if (complement in seen) {
-            return [seen[complement], i];
-        }
-        seen[nums[i]] = i;
-    }
-    return [];
+**Request:**
+```json
+{
+  "email": "user@example.com",
+  "password": "password123"
 }
-
-console.log(twoSum([2, 7, 11, 15], 9));
 ```
 
-## 🏗️ Production Deployment
-
-### Environment Variables
-
-Create `.env` file in backend:
-```bash
-DATABASE_URL=postgresql+asyncpg://user:pass@host:5432/db
-SECRET_KEY=<generate-with-openssl-rand-hex-32>
-DEBUG=False
+**Response:**
+```json
+{
+  "id": 1,
+  "email": "user@example.com",
+  "role": "user",
+  "created_at": "2026-03-04T10:00:00"
+}
 ```
 
-### Build and Deploy
+#### POST `/auth/login`
+Login and receive access token.
+
+**Request:**
+```json
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+```
+
+**Response:**
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIs...",
+  "token_type": "bearer"
+}
+```
+
+Sets `refresh_token` HttpOnly cookie.
+
+#### POST `/auth/refresh`
+Refresh access token using refresh token cookie.
+
+**Response:**
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIs...",
+  "token_type": "bearer"
+}
+```
+
+#### POST `/auth/logout`
+Logout and clear refresh token.
+
+#### GET `/auth/me`
+Get current user information (requires authentication).
+
+### Problems Endpoints
+
+#### GET `/problems`
+Get all problems (anonymous access allowed).
+
+**Response:**
+```json
+[
+  {
+    "id": 1,
+    "title": "Two Sum",
+    "description": "...",
+    "difficulty": "easy",
+    "time_limit": 5,
+    "memory_limit": 256,
+    "created_at": "2026-03-04T10:00:00"
+  }
+]
+```
+
+#### GET `/problems/{id}`
+Get problem details with non-hidden test cases.
+
+#### POST `/problems`
+Create new problem (admin only).
+
+### Submissions Endpoints
+
+#### POST `/submissions`
+Submit code for a problem (requires authentication).
+
+**Request:**
+```json
+{
+  "problem_id": 1,
+  "language": "python",
+  "code": "def solution():\n    pass"
+}
+```
+
+**Response:**
+```json
+{
+  "id": 1,
+  "user_id": 1,
+  "problem_id": 1,
+  "language": "python",
+  "verdict": "Accepted",
+  "runtime": 45.23,
+  "memory": 12.5,
+  "time_complexity": "O(n)",
+  "space_complexity": "O(1)",
+  "created_at": "2026-03-04T10:00:00"
+}
+```
+
+#### GET `/submissions`
+Get user submissions (requires authentication) or all submissions (anonymous).
+
+#### GET `/submissions/{id}`
+Get specific submission.
+
+### Leaderboard Endpoints
+
+#### GET `/leaderboard`
+Get leaderboard with sorting options.
+
+**Query Parameters:**
+- `sort_by`: `solved` | `time` | `space` | `submissions`
+- `problem_id`: Filter by problem (required for `submissions` sort)
+- `limit`: Max entries (default: 100)
+
+**Response:**
+```json
+[
+  {
+    "user_id": 1,
+    "email": "user@example.com",
+    "problems_solved": 5,
+    "avg_time_complexity": 2.5,
+    "avg_space_complexity": 2.0,
+    "total_submissions": 12
+  }
+]
+```
+
+### Admin Endpoints
+
+#### GET `/admin/dashboard`
+Get admin dashboard statistics (admin only).
+
+**Response:**
+```json
+{
+  "total_users": 100,
+  "total_submissions": 500,
+  "accepted_submissions": 300,
+  "most_attempted_problems": [...],
+  "language_usage": {"python": 250, "java": 150, ...},
+  "top_users": [...]
+}
+```
+
+---
+
+## 🗄 Database Structure
+
+### Users Table
+```sql
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    role VARCHAR(20) DEFAULT 'user',
+    created_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+### Problems Table
+```sql
+CREATE TABLE problems (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255) UNIQUE NOT NULL,
+    description TEXT NOT NULL,
+    difficulty VARCHAR(20),
+    time_limit INTEGER DEFAULT 5,
+    memory_limit INTEGER DEFAULT 256,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+### TestCases Table
+```sql
+CREATE TABLE test_cases (
+    id SERIAL PRIMARY KEY,
+    problem_id INTEGER REFERENCES problems(id),
+    input TEXT,
+    expected_output TEXT,
+    is_hidden BOOLEAN DEFAULT FALSE
+);
+```
+
+### Submissions Table
+```sql
+CREATE TABLE submissions (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id),
+    problem_id INTEGER REFERENCES problems(id),
+    language VARCHAR(20),
+    code TEXT,
+    verdict VARCHAR(50),
+    runtime FLOAT,
+    memory FLOAT,
+    time_complexity VARCHAR(50),
+    space_complexity VARCHAR(50),
+    created_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+---
+
+## 🔒 Security Features
+
+### 1. Authentication
+- Bcrypt password hashing
+- JWT with expiration
+- HttpOnly cookies for refresh tokens
+- CORS configuration
+
+### 2. Code Execution Sandbox
+```python
+docker run \
+  --rm \
+  --network none \
+  --memory 256m \
+  --cpus 0.5 \
+  --pids-limit 64 \
+  --read-only \
+  image:tag
+```
+
+### 3. AI Code Analysis
+Detects:
+- Malicious system calls
+- File operations
+- Network requests
+- Fork bombs
+- Infinite loops (heuristic)
+
+### 4. Rate Limiting
+- 30 submissions per minute per user
+- Tracked via Redis
+- IP-based for anonymous users
+
+### 5. Input Validation
+- Pydantic models for all endpoints
+- SQL injection prevention via ORM
+- XSS protection in frontend
+
+---
+
+## 🧪 Testing
+
+### Run Backend Tests
 
 ```bash
-# Backend
 cd backend
-docker build -t skillnest-backend .
-docker run -p 8000:8000 --env-file .env skillnest-backend
+pytest tests/ -v
+```
 
-# Frontend
+### Run Frontend Tests
+
+```bash
 cd frontend
-npm run build
-docker build -t skillnest-frontend .
-docker run -p 3000:3000 skillnest-frontend
+npm run test
 ```
 
-## 🔧 Advanced Configuration
+### Manual Testing
 
-### Adjust Resource Limits
+Use the provided demo accounts:
+- **Admin:** admin@skillnest.com / admin123
+- **User:** user@test.com / user123
 
-Edit `backend/app/config.py`:
-```python
-DOCKER_MEMORY_LIMIT = "512m"  # Increase memory
-DOCKER_CPU_LIMIT = 1.0        # More CPU
-EXECUTION_TIMEOUT = 5         # Longer timeout
+---
+
+## 🚢 Deployment
+
+### Production Checklist
+
+- [ ] Change `SECRET_KEY` to a strong random value
+- [ ] Enable HTTPS (use Nginx with Let's Encrypt)
+- [ ] Set `secure=True` for refresh token cookies
+- [ ] Use production database credentials
+- [ ] Configure proper CORS origins
+- [ ] Set up monitoring (Prometheus/Grafana)
+- [ ] Configure log aggregation
+- [ ] Set up automated backups
+- [ ] Use managed Redis (AWS ElastiCache, etc.)
+- [ ] Configure CDN for frontend assets
+
+### Docker Compose Production
+
+```yaml
+# docker-compose.prod.yml
+version: '3.8'
+services:
+  backend:
+    image: skillnest-backend:latest
+    environment:
+      - SECRET_KEY=${SECRET_KEY}
+      - DATABASE_URL=${DATABASE_URL}
+    restart: always
 ```
 
-### Add More Languages
+### Kubernetes Deployment
 
-1. Update `LANGUAGE_CONFIGS` in `backend/app/services/execution_service.py`
-2. Add language docs to `LANGUAGE_DOCS` in `backend/app/services/rag_service.py`
-3. Pull required Docker image
+```bash
+# Apply Kubernetes manifests
+kubectl apply -f k8s/
 
-### Custom Rate Limits
-
-Edit `backend/app/config.py`:
-```python
-RATE_LIMIT_SUBMISSIONS = "20/minute"  # More submissions
+# Scale workers
+kubectl scale deployment skillnest-backend --replicas=5
 ```
 
-## 📊 Database Schema
-
-**Users Table:**
-- Includes role (user/admin) for RBAC
-- Score tracking for leaderboard
-- Indexed on score for fast queries
-
-**Submissions Table:**
-- Indexed on user_id and problem_id
-- Detected language stored
-- Runtime and memory metrics
-- Timestamp for daily analytics
-
-**Indexes:**
-- `idx_submission_user_id` - Fast user history
-- `idx_submission_problem_id` - Problem analytics
-- `users.score DESC` - Leaderboard queries
+---
 
 ## 🐛 Troubleshooting
 
-### Docker Permission Error
-```bash
-# Windows: Ensure Docker Desktop is running
-# Linux: Add user to docker group
-sudo usermod -aG docker $USER
-```
+### Docker Container Issues
 
-### Ollama Connection Failed
 ```bash
-# Check Ollama is running
-ollama list
-
-# Restart Ollama service
-# Windows: Restart from Task Manager
-# Linux: sudo systemctl restart ollama
-```
-
-### Database Connection Error
-```bash
-# Check PostgreSQL container
+# Check running containers
 docker ps
 
-# Restart database
-docker-compose restart postgres
+# View container logs
+docker logs skillnest_backend
+
+# Restart services
+docker-compose restart
+
+# Clean rebuild
+docker-compose down -v
+docker-compose build --no-cache
+docker-compose up -d
 ```
 
-### Frontend Monaco Editor Not Loading
+### Database Connection Errors
+
 ```bash
-# Clear node_modules and reinstall
-rm -rf node_modules package-lock.json
-npm install
+# Check PostgreSQL is running
+docker-compose ps postgres
+
+# Connect to database
+docker exec -it skillnest_postgres psql -U skillnest -d skillnest_db
+
+# Check tables
+\dt
 ```
 
-## 📈 Performance Considerations
+### Redis Connection Errors
 
-- **Database**: Indexes on high-query columns
-- **Code Execution**: Containers cleaned immediately after use
-- **Rate Limiting**: Prevents abuse
-- **Async/Await**: Non-blocking I/O throughout
-- **Connection Pooling**: PostgreSQL pool (10 connections, 20 overflow)
+```bash
+# Test Redis connection
+docker exec -it skillnest_redis redis-cli ping
 
-## 🔒 Security Best Practices
+# Check keys
+docker exec -it skillnest_redis redis-cli KEYS '*'
+```
 
-✅ **Implemented:**
-- JWT with expiration
-- Password hashing (bcrypt)
-- Role-based access control
-- Docker network isolation
-- Rate limiting
-- Input validation
-- Resource limits
+### Code Execution Failures
 
-⚠️ **Production Recommendations:**
-- Use HTTPS
-- Rotate SECRET_KEY regularly
-- Enable CORS only for trusted origins
-- Set up monitoring and logging
-- Regular security audits
-- Keep dependencies updated
+```bash
+# Check Docker daemon
+docker info
+
+# Pull missing images
+docker pull python:3.11-slim
+docker pull openjdk:17-slim
+docker pull gcc:13-alpine
+
+# Check container logs
+docker logs <container_id>
+```
+
+---
+
+## 🔄 Initial Data
+
+The platform includes 6 seeded DSA problems:
+
+1. **Two Sum** (Easy)
+2. **Valid Parentheses** (Easy)
+3. **Reverse Linked List** (Easy)
+4. **Binary Search** (Easy)
+5. **Merge Sorted Arrays** (Medium)
+6. **Longest Substring Without Repeating Characters** (Medium)
+
+Run `python seed.py` to populate the database.
+
+---
+
+## 📝 API Rate Limits
+
+| Endpoint | Limit | Window |
+|----------|-------|--------|
+| `/submissions` (POST) | 30 | 1 minute |
+| Other endpoints | Unlimited | - |
+
+---
 
 ## 🤝 Contributing
 
-This is a complete production-ready system. To extend:
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-1. Add more problem test cases
-2. Implement problem tags/categories
-3. Add social features (comments, discussions)
-4. Implement contest mode
-5. Add code templates
-6. Extend RAG with more languages
+---
 
-## 📝 License
+## 📄 License
 
-This project is created for educational purposes.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
 
 ## 🙏 Acknowledgments
 
-- **FastAPI** - Modern Python web framework
-- **SvelteKit** - Reactive frontend framework
-- **Monaco Editor** - VS Code editor
-- **Ollama** - Local LLM inference
-- **Docker** - Containerization
+- FastAPI for the excellent async framework
+- SvelteKit for the modern frontend experience
+- Monaco Editor by Microsoft
+- Docker for containerization
+- Redis for caching excellence
 
 ---
 
-## 🎓 Technical Deep Dive
+## 📞 Support
 
-### RAG Language Detection Flow
-
-1. User submits code
-2. Code embedding generated via `nomic-embed-text`
-3. Vector similarity search in ChromaDB
-4. Top 3 language docs retrieved
-5. LLM (llama3.2) classifies with context
-6. Fallback to heuristics if needed
-
-### Docker Execution Pipeline
-
-1. Code written to temporary file
-2. Container spawned with:
-   - Mounted code volume (read-only)
-   - No network access
-   - Memory/CPU limits
-   - Non-root user
-3. Code executed with timeout
-4. Metrics captured (runtime, memory)
-5. Container removed immediately
-6. Verdict determined and stored
-
-### Admin Analytics Queries
-
-All optimized with proper indexes:
-- **Top Users**: `ORDER BY score DESC LIMIT 20`
-- **Acceptance Rate**: Aggregated count with filter
-- **Daily Count**: Date casting with timezone
-- **Language Usage**: GROUP BY with count
-- **Problem Analytics**: JOIN with aggregation
+For issues and questions:
+- Open an issue on GitHub
+- Email: support@skillnest.dev
 
 ---
 
-**Built with ❤️ for productive coding practice**
+<div align="center">
 
-For questions or issues, check the API documentation at `/docs` when running the backend.
+**Built with ❤️ by distributed systems architects**
+
+⭐ Star this repository if you find it helpful!
+
+</div>

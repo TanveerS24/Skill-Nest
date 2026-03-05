@@ -1,40 +1,30 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
-from slowapi.errors import RateLimitExceeded
 from contextlib import asynccontextmanager
-from app.config import settings
 from app.database import init_db
-from app.routers import auth, problems, submissions, admin
+from app.redis_client import init_redis, close_redis
+from app.middleware import RateLimitMiddleware
+from app.routes import auth, problems, submissions, leaderboard, admin
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Lifespan context manager for startup and shutdown events"""
     # Startup
     await init_db()
-    print("Database initialized")
+    await init_redis()
     yield
     # Shutdown
-    print("Shutting down...")
+    await close_redis()
 
 
-# Create FastAPI app
 app = FastAPI(
-    title="SkillNest API",
-    description="Production-grade multi-language coding platform",
+    title="SkillNest - Coding Platform API",
+    description="Multi-language coding platform with Docker sandbox execution",
     version="1.0.0",
-    lifespan=lifespan,
+    lifespan=lifespan
 )
 
-# Configure rate limiter
-limiter = Limiter(key_func=get_remote_address)
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-
-# Configure CORS
+# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://localhost:3000"],  # SvelteKit dev server
@@ -43,53 +33,26 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Rate limiting
+app.add_middleware(RateLimitMiddleware)
+
 # Include routers
-app.include_router(auth.router, prefix=settings.API_V1_PREFIX)
-app.include_router(problems.router, prefix=settings.API_V1_PREFIX)
-app.include_router(submissions.router, prefix=settings.API_V1_PREFIX)
-app.include_router(admin.router, prefix=settings.API_V1_PREFIX)
+app.include_router(auth.router)
+app.include_router(problems.router)
+app.include_router(submissions.router)
+app.include_router(leaderboard.router)
+app.include_router(admin.router)
 
 
 @app.get("/")
 async def root():
-    """Root endpoint"""
     return {
         "message": "SkillNest API",
         "version": "1.0.0",
-        "docs": "/docs",
+        "docs": "/docs"
     }
 
 
 @app.get("/health")
 async def health_check():
-    """Health check endpoint"""
     return {"status": "healthy"}
-
-
-# Global exception handler
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
-    """Handle uncaught exceptions"""
-    if settings.DEBUG:
-        import traceback
-        error_detail = {
-            "error": str(exc),
-            "traceback": traceback.format_exc(),
-        }
-    else:
-        error_detail = {"error": "Internal server error"}
-    
-    return JSONResponse(
-        status_code=500,
-        content=error_detail,
-    )
-
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(
-        "main:app",
-        host="0.0.0.0",
-        port=8000,
-        reload=settings.DEBUG,
-    )
