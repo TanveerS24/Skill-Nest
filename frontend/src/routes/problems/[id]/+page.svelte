@@ -29,7 +29,8 @@
 		try {
 			loading = true;
 			error = null;
-			const id = parseInt($page.params.id);
+			const id = parseInt($page.params.id || '0');
+			if (!id || id === 0) throw new Error('Invalid problem ID');
 			problem = await problemsApi.getProblem(id);
 			code = languageTemplates[language];
 		} catch (err: any) {

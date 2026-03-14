@@ -2,13 +2,13 @@
 
 <div align="center">
 
-**A production-ready coding platform for solving Data Structure & Algorithm problems with Docker sandbox execution, AI code analysis, Redis caching, and dynamic leaderboards.**
+**A production-ready coding platform for solving Data Structure & Algorithm problems with Docker sandbox execution, Redis caching, JWT authentication, and dynamic leaderboards.**
 
-[![Python](https://img.shields.io/badge/Python-3.11-blue.svg)](https://www.python.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.109-green.svg)](https://fastapi.tiangolo.com/)
+[![Java](https://img.shields.io/badge/Java-21-orange.svg)](https://www.oracle.com/java/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2-green.svg)](https://spring.io/projects/spring-boot)
 [![SvelteKit](https://img.shields.io/badge/SvelteKit-2.0-orange.svg)](https://kit.svelte.dev/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://www.docker.com/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue.svg)](https://www.postgresql.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue.svg)](https://www.postgresql.org/)
 [![Redis](https://img.shields.io/badge/Redis-7-red.svg)](https://redis.io/)
 
 </div>
@@ -119,14 +119,14 @@ The platform supports anonymous browsing while requiring authentication for code
 ### Backend
 | Technology | Version | Purpose |
 |-----------|---------|---------|
-| **FastAPI** | 0.109 | Async REST API framework |
-| **SQLAlchemy** | 2.0 | Async ORM for database |
-| **PostgreSQL** | 15 | Primary database |
-| **Redis** | 7 | Caching & rate limiting |
-| **Docker SDK** | 7.0 | Container management |
-| **Pydantic** | 2.5 | Data validation |
-| **python-jose** | 3.3 | JWT handling |
-| **passlib** | 1.7 | Password hashing |
+| **Spring Boot** | 3.2.0 | REST API framework |
+| **Spring Data JPA** | 3.2.0 | ORM with Hibernate |
+| **Spring Security** | 3.2.0 | Authorization & authentication |
+| **PostgreSQL** | 16 | Primary database |
+| **Redis** | 7 | Caching & leaderboard ranking |
+| **Docker Java SDK** | 3.3.4 | Container management for code execution |
+| **JJWT** | 0.12.3 | JWT token handling |
+| **Lombok** | 1.18.30 | Code generation utilities |
 
 ### Frontend
 | Technology | Version | Purpose |
@@ -138,10 +138,11 @@ The platform supports anonymous browsing while requiring authentication for code
 | **Vite** | 5.0 | Build tool |
 
 ### Infrastructure
-- **Docker** & **Docker Compose** - Containerization
-- **PostgreSQL** - Persistent data storage
-- **Redis** - Caching layer
-- **Nginx** (optional) - Reverse proxy
+- **Docker** & **Docker Compose** - Containerization & orchestration
+- **PostgreSQL 16** - Persistent data storage with connection pooling
+- **Redis 7** - Caching layer for leaderboards & rankings
+- **Nginx** (optional) - Reverse proxy for production
+- **Java 21 JDK** - Runtime environment
 
 ---
 
@@ -159,16 +160,17 @@ The platform supports anonymous browsing while requiring authentication for code
          │               │
 ┌────────▼────────┐      │
 │                 │      │
-│   FastAPI       │      │
+│   Spring Boot   │      │
 │   Backend       │      │
+│   (Java 21)     │      │
 │                 │      │
 └────┬─────┬──────┘      │
      │     │             │
      │     │             │
 ┌────▼──┐ ┌▼────────┐   │
 │       │ │         │   │
-│ PostgreSQL│ Redis │   │
-│       │ │         │   │
+│PostgreSQL│ Redis │   │
+│  (JPA)  │(Caching)   │
 └───────┘ └─────────┘   │
      │                  │
      │                  │
@@ -176,20 +178,19 @@ The platform supports anonymous browsing while requiring authentication for code
 │                   │   │
 │  Docker Engine    │   │
 │  (Code Execution) │───┘
+│  (docker-java)    │
 │                   │
 └───────────────────┘
 ```
 
 ### Request Flow
 
-1. **User submits code** → Frontend (SvelteKit)
-2. **JWT validation** → FastAPI middleware
-3. **Rate limit check** → Redis
-4. **AI analysis** → External AI API (optional)
-5. **Code execution** → Docker container
-6. **Result storage** → PostgreSQL
-7. **Cache update** → Redis
-8. **Response** → Frontend
+1. **User submits code** → Frontend redirects to Spring Boot (SvelteKit)
+2. **JWT validation** → Spring Security filter
+3. **Code execution** → Docker container orchestration via docker-java SDK
+4. **Result storage** → PostgreSQL via Spring Data JPA/Hibernate
+5. **Leaderboard cache** → Redis via Spring Data Redis (@Cacheable)
+6. **Response** → REST controller returns JSON response
 
 ---
 
@@ -197,13 +198,16 @@ The platform supports anonymous browsing while requiring authentication for code
 
 ### Required Software
 - **Docker** (20.10+) and **Docker Compose** (2.0+)
-- **Python** 3.11+ (for local development)
+- **Java 21 JDK** (for local development and building)
+- **Maven** 3.9+ (build tool)
 - **Node.js** 20+ (for frontend development)
 - **Git**
+- **PostgreSQL 16** (can run via Docker)
+- **Redis 7** (can run via Docker)
 
 ### Optional
-- **OpenAI API Key** (for AI code analysis)
-- **Kubernetes** (for production scaling)}
+- **Kubernetes** (for production scaling)
+- **Nginx** (for reverse proxy)
 
 ---
 
@@ -216,63 +220,60 @@ git clone <repository-url>
 cd skillnest
 ```
 
-### 2. Set Up Environment Variables
+### 2. Verify Prerequisites
 
 ```bash
-# Copy example env file
-cp backend/.env.example backend/.env
+# Verify Java 21 is installed
+java -version
 
-# Edit backend/.env with your configuration
-SECRET_KEY=your-secret-key-min-32-characters-long
-AI_API_KEY=your-openai-api-key  # Optional
+# Verify Maven is installed
+mvn -version
+
+# Verify Docker is installed
+docker --version
 ```
 
-### 3. Pull Docker Images
+### 3. Configure Backend Environment
+
+Edit `backend/src/main/resources/application.properties`:
+
+```properties
+# Server Configuration
+server.port=8080
+server.servlet.context-path=/api
+
+# Database Configuration
+spring.datasource.url=jdbc:postgresql://localhost:5432/skillnest_db
+spring.datasource.username=skillnest
+spring.datasource.password=skillnest123
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=false
+
+# Redis Configuration
+spring.data.redis.host=localhost
+spring.data.redis.port=6379
+spring.cache.type=redis
+
+# JWT Configuration
+jwt.secret=your-secret-key-change-this-in-production-minimum-32-characters-long
+jwt.expiration-ms=900000  # 15 minutes
+jwt.refresh-expiration-ms=604800000  # 7 days
+
+# Docker Configuration
+docker.host=unix:///var/run/docker.sock  # On Windows: tcp://localhost:2375
+
+# CORS Configuration
+cors.allowed-origins=http://localhost:5173,http://localhost:3000
+```
+
+### 4. Pull Required Docker Images
 
 ```bash
-# Backend will automatically pull these on first run
+# These will be automatically pulled when code execution is needed
 docker pull python:3.11-slim
-docker pull openjdk:17-slim
-docker pull gcc:13-alpine
-```
-
----
-
-## ⚙️ Configuration
-
-### Backend Configuration (`backend/.env`)
-
-```env
-# Database
-DATABASE_URL=postgresql+asyncpg://skillnest:skillnest123@localhost:5432/skillnest_db
-
-# Redis
-REDIS_URL=redis://localhost:6379/0
-
-# JWT
-SECRET_KEY=your-secret-key-change-this-in-production-min-32-characters-long
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=15
-REFRESH_TOKEN_EXPIRE_DAYS=7
-
-# AI Service (Optional)
-AI_API_KEY=sk-...your-openai-key
-AI_API_URL=https://api.openai.com/v1/chat/completions
-
-# Rate Limiting
-RATE_LIMIT_SUBMISSIONS=30
-
-# Execution Limits
-DEFAULT_TIME_LIMIT=5
-DEFAULT_MEMORY_LIMIT=256
-```
-
-### Frontend Configuration
-
-The frontend uses environment variables prefixed with `PUBLIC_`:
-
-```env
-PUBLIC_API_URL=http://localhost:8000
+docker pull openjdk:21-slim
+docker pull gcc:13
+docker pull ubuntu:22.04  # For C++ compilation
 ```
 
 ---
@@ -282,49 +283,45 @@ PUBLIC_API_URL=http://localhost:8000
 ### Option 1: Using Docker Compose (Recommended)
 
 ```bash
-# Start all services
-docker-compose up -d
+# Start all services (PostgreSQL, Redis, Spring Boot Backend, SvelteKit Frontend)
+docker-compose -f docker-compose-springboot.yml up -d
 
 # View logs
-docker-compose logs -f
+docker-compose -f docker-compose-springboot.yml logs -f
 
 # Stop all services
-docker-compose down
+docker-compose -f docker-compose-springboot.yml down
 ```
 
 Services will be available at:
 - **Frontend:** http://localhost:5173
-- **Backend API:** http://localhost:8000
-- **API Docs:** http://localhost:8000/docs
+- **Backend API:** http://localhost:8080/api
+- **Health Check:** http://localhost:8080/api/health
 
 ### Option 2: Local Development
 
-#### Backend
+#### Backend (Spring Boot)
 
 ```bash
 cd backend
 
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+# Build the project
+mvn clean package
 
 # Install dependencies
-pip install -r requirements.txt
+mvn install
 
-# Start Docker-based services
+# Start PostgreSQL and Redis (if not already running)
 docker-compose up -d postgres redis
 
-# Run database migrations (create tables)
-python -c "from app.database import init_db; import asyncio; asyncio.run(init_db())"
+# Run Spring Boot application
+mvn spring-boot:run
 
-# Seed database with initial problems
-python seed.py
-
-# Start FastAPI server
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+# OR run the JAR directly
+java -jar target/skilnest-1.0.0.jar
 ```
 
-#### Frontend
+#### Frontend (SvelteKit)
 
 ```bash
 cd frontend
@@ -334,6 +331,8 @@ npm install
 
 # Start development server
 npm run dev
+
+# Access at http://localhost:5173
 ```
 
 ---
@@ -388,41 +387,74 @@ Sets `refresh_token` HttpOnly cookie.
 Refresh access token using refresh token cookie.
 
 **Response:**
+**Response:**
 ```json
 {
-  "access_token": "eyJhbGciOiJIUzI1NiIs...",
-  "token_type": "bearer"
+  "accessToken": "eyJhbGciOiJIUzI1NiIs...",
+  "tokenType": "Bearer",
+  "refreshToken": "eyJhbGciOiJIUzI1NiIs..."
 }
 ```
 
-#### POST `/auth/logout`
-Logout and clear refresh token.
+Includes `refreshToken` in secure HttpOnly cookie.
+
+#### POST `/auth/refresh`
+Refresh access token using refresh token from cookie.
+
+**Response:**
+```json
+{
+  "accessToken": "eyJhbGciOiJIUzI1NiIs...",
+  "tokenType": "Bearer"
+}
+```
 
 #### GET `/auth/me`
 Get current user information (requires authentication).
 
+**Response:**
+```json
+{
+  "id": 1,
+  "email": "user@example.com",
+  "role": "USER",
+  "createdAt": "2026-03-04T10:00:00Z"
+}
+```
+
 ### Problems Endpoints
 
 #### GET `/problems`
-Get all problems (anonymous access allowed).
+Get all problems with pagination (anonymous access allowed).
+
+**Query Parameters:**
+- `page`: Page number (0-indexed)
+- `size`: Results per page (default: 20)
+- `sort`: Sort criteria
 
 **Response:**
 ```json
-[
-  {
-    "id": 1,
-    "title": "Two Sum",
-    "description": "...",
-    "difficulty": "easy",
-    "time_limit": 5,
-    "memory_limit": 256,
-    "created_at": "2026-03-04T10:00:00"
-  }
-]
+{
+  "content": [
+    {
+      "id": 1,
+      "title": "Two Sum",
+      "description": "...",
+      "difficulty": "EASY",
+      "timeLimit": 5,
+      "memoryLimit": 256,
+      "createdAt": "2026-03-04T10:00:00Z"
+    }
+  ],
+  "totalElements": 50,
+  "totalPages": 3,
+  "currentPage": 0,
+  "pageSize": 20
+}
 ```
 
 #### GET `/problems/{id}`
-Get problem details with non-hidden test cases.
+Get problem details with non-hidden test cases and submission details.
 
 #### POST `/problems`
 Create new problem (admin only).
@@ -435,8 +467,8 @@ Submit code for a problem (requires authentication).
 **Request:**
 ```json
 {
-  "problem_id": 1,
-  "language": "python",
+  "problemId": 1,
+  "language": "PYTHON",
   "code": "def solution():\n    pass"
 }
 ```
@@ -445,60 +477,45 @@ Submit code for a problem (requires authentication).
 ```json
 {
   "id": 1,
-  "user_id": 1,
-  "problem_id": 1,
-  "language": "python",
-  "verdict": "Accepted",
+  "userId": 1,
+  "problemId": 1,
+  "language": "PYTHON",
+  "verdict": "ACCEPTED",
   "runtime": 45.23,
   "memory": 12.5,
-  "time_complexity": "O(n)",
-  "space_complexity": "O(1)",
-  "created_at": "2026-03-04T10:00:00"
+  "output": "Test passed",
+  "createdAt": "2026-03-04T10:00:00Z"
 }
 ```
 
 #### GET `/submissions`
-Get user submissions (requires authentication) or all submissions (anonymous).
+Get user submissions with pagination (requires authentication).
 
-#### GET `/submissions/{id}`
-Get specific submission.
+#### GET `/submissions/problem/{problemId}`
+Get all submissions for a specific problem.
 
 ### Leaderboard Endpoints
 
 #### GET `/leaderboard`
-Get leaderboard with sorting options.
-
-**Query Parameters:**
-- `sort_by`: `solved` | `time` | `space` | `submissions`
-- `problem_id`: Filter by problem (required for `submissions` sort)
-- `limit`: Max entries (default: 100)
+Get leaderboard with user rankings.
 
 **Response:**
 ```json
 [
   {
-    "user_id": 1,
+    "userId": 1,
     "email": "user@example.com",
-    "problems_solved": 5,
-    "avg_time_complexity": 2.5,
-    "avg_space_complexity": 2.0,
-    "total_submissions": 12
+    "problemsSolved": 5,
+    "totalSubmissions": 12,
+    "rank": 1
   }
 ]
 ```
 
 ### Admin Endpoints
 
-#### GET `/admin/dashboard`
-Get admin dashboard statistics (admin only).
-
-**Response:**
-```json
-{
-  "total_users": 100,
-  "total_submissions": 500,
-  "accepted_submissions": 300,
-  "most_attempted_problems": [...],
+#### GET `/admin/all-testcases/{problemId}`
+Get all test cases including hidden ones (admin only).
   "language_usage": {"python": 250, "java": 150, ...},
   "top_users": [...]
 }
@@ -596,19 +613,27 @@ Detects:
 - IP-based for anonymous users
 
 ### 5. Input Validation
-- Pydantic models for all endpoints
-- SQL injection prevention via ORM
-- XSS protection in frontend
+- Spring Validation annotations across all DTOs
+- SQL injection prevention via Spring Data JPA (JPQL/Native Query parameterization)
+- XSS protection in frontend with proper encoding
 
 ---
 
 ## 🧪 Testing
 
-### Run Backend Tests
+### Run Backend Tests (JUnit 5)
 
 ```bash
 cd backend
-pytest tests/ -v
+
+# Run all tests
+mvn test
+
+# Run specific test clase
+mvn test -Dtest=AuthServiceTest
+
+# Run with coverage
+mvn test jacoco:report
 ```
 
 ### Run Frontend Tests
@@ -621,8 +646,8 @@ npm run test
 ### Manual Testing
 
 Use the provided demo accounts:
-- **Admin:** admin@skillnest.com / admin123
-- **User:** user@test.com / user123
+- **Admin:** admin@skillnest.com / password123
+- **User:** user@test.com / password123
 
 ---
 
@@ -630,124 +655,152 @@ Use the provided demo accounts:
 
 ### Production Checklist
 
-- [ ] Change `SECRET_KEY` to a strong random value
-- [ ] Enable HTTPS (use Nginx with Let's Encrypt)
-- [ ] Set `secure=True` for refresh token cookies
+- [ ] Change `jwt.secret` to a strong random value (min 32 characters)
+- [ ] Enable HTTPS (use Nginx with Let's Encrypt or cloud loadbalancer)
+- [ ] Set `server.ssl.enabled=true` in application.properties
 - [ ] Use production database credentials
-- [ ] Configure proper CORS origins
-- [ ] Set up monitoring (Prometheus/Grafana)
-- [ ] Configure log aggregation
-- [ ] Set up automated backups
-- [ ] Use managed Redis (AWS ElastiCache, etc.)
-- [ ] Configure CDN for frontend assets
+- [ ] Configure proper CORS origins in SecurityConfig.java
+- [ ] Set up monitoring (Spring Boot Actuator, Prometheus)
+- [ ] Configure log aggregation (ELK stack)
+- [ ] Set up automated database backups
+- [ ] Use managed Redis service (AWS ElastiCache, Azure Redis)
+- [ ] Configure CDN/Object storage for static assets
 
-### Docker Compose Production
+### Docker Production Build
 
-```yaml
-# docker-compose.prod.yml
-version: '3.8'
-services:
-  backend:
-    image: skillnest-backend:latest
-    environment:
-      - SECRET_KEY=${SECRET_KEY}
-      - DATABASE_URL=${DATABASE_URL}
-    restart: always
+```bash
+# Build production JAR
+mvn clean package -DskipTests=true
+
+# Build Docker image
+docker build -t skillnest-backend:latest -f backend/Dockerfile .
+
+# Run production container
+docker run -d \
+  --name skillnest-backend \
+  -e DATABASE_URL=jdbc:postgresql://prod-db:5432/skillnest \
+  -e REDIS_HOST=prod-redis \
+  -p 8080:8080 \
+  skillnest-backend:latest
 ```
 
 ### Kubernetes Deployment
 
 ```bash
-# Apply Kubernetes manifests
-kubectl apply -f k8s/
+# Deploy to Kubernetes cluster
+kubectl apply -f k8s/namespace.yaml
+kubectl apply -f k8s/deployment.yaml
+kubectl apply -f k8s/service.yaml
 
-# Scale workers
-kubectl scale deployment skillnest-backend --replicas=5
+# Scale application
+kubectl scale deployment skillnest-backend --replicas=3 -n skillnest
+
+# Monitor deployment
+kubectl logs -f deployment/skillnest-backend -n skillnest
 ```
 
 ---
 
 ## 🐛 Troubleshooting
 
-### Docker Container Issues
+### Spring Boot Application Issues
 
 ```bash
-# Check running containers
-docker ps
+# Check if port 8080 is already in use
+lsof -i :8080  # On Windows: netstat -ano | findstr :8080
 
-# View container logs
-docker logs skillnest_backend
+# Check application logs
+tail -f backend/logs/application.log
 
-# Restart services
-docker-compose restart
-
-# Clean rebuild
-docker-compose down -v
-docker-compose build --no-cache
-docker-compose up -d
+# Check application health
+curl http://localhost:8080/api/health
 ```
 
 ### Database Connection Errors
 
 ```bash
 # Check PostgreSQL is running
-docker-compose ps postgres
+docker ps | grep postgres
 
 # Connect to database
-docker exec -it skillnest_postgres psql -U skillnest -d skillnest_db
+docker exec -it skillnest-postgres psql -U skillnest -d skillnest_db
 
-# Check tables
+# Verify tables were created
 \dt
+
+# Check Hibernate logs
+# Set spring.jpa.show-sql=true in application.properties
 ```
 
 ### Redis Connection Errors
 
 ```bash
 # Test Redis connection
-docker exec -it skillnest_redis redis-cli ping
+docker exec -it skillnest-redis redis-cli ping
 
-# Check keys
-docker exec -it skillnest_redis redis-cli KEYS '*'
+# Check Redis keys
+docker exec -it skillnest-redis redis-cli KEYS '*'
+
+# Clear Redis cache if needed
+docker exec -it skillnest-redis redis-cli FLUSHALL
 ```
 
 ### Code Execution Failures
 
 ```bash
-# Check Docker daemon
+# Check Docker daemon is running
 docker info
 
-# Pull missing images
+# Pull required execution images
 docker pull python:3.11-slim
-docker pull openjdk:17-slim
-docker pull gcc:13-alpine
+docker pull openjdk:21-slim
+docker pull gcc:13
+docker pull ubuntu:22.04
 
-# Check container logs
+# Check Docker socket permissions (Linux)
+ls -la /var/run/docker.sock
+
+# Check container execution logs
 docker logs <container_id>
+```
+
+### Compilation/Build Errors
+
+```bash
+# Clean rebuild
+mvn clean install
+
+# Skip tests for faster build
+mvn clean package -DskipTests=true
+
+# Check Java version
+java -version
+
+# Check Maven version
+mvn -version
 ```
 
 ---
 
 ## 🔄 Initial Data
 
-The platform includes 6 seeded DSA problems:
+The platform includes 6 seeded DSA problems accessible via:
+- `/api/problems` endpoint after application starts
+- Problems include: Two Sum, Valid Parentheses, Reverse Linked List, Binary Search, Merge Sorted Arrays, Longest Substring
 
-1. **Two Sum** (Easy)
-2. **Valid Parentheses** (Easy)
-3. **Reverse Linked List** (Easy)
-4. **Binary Search** (Easy)
-5. **Merge Sorted Arrays** (Medium)
-6. **Longest Substring Without Repeating Characters** (Medium)
-
-Run `python seed.py` to populate the database.
+To add custom problems:
+- Use POST `/api/problems` endpoint (admin only)
+- Include title, description, difficulty, and test cases
+- Test cases can be marked as hidden for hidden test suite
 
 ---
 
 ## 📝 API Rate Limits
 
-| Endpoint | Limit | Window |
-|----------|-------|--------|
-| `/submissions` (POST) | 30 | 1 minute |
-| Other endpoints | Unlimited | - |
+| Endpoint | Limit | Window | Notes |
+|----------|-------|--------|-------|
+| `/submissions` (POST) | Per problem | Per minute | Prevents spam submissions |
+| Other endpoints | Unlimited | - | Read-only endpoints not rate-limited |
 
 ---
 
@@ -769,11 +822,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- FastAPI for the excellent async framework
-- SvelteKit for the modern frontend experience
+- Spring Boot for the robust backend framework
+- Spring Security for comprehensive authentication
+- Spring Data JPA for elegant ORM
+- SvelteKit for the modern frontend
 - Monaco Editor by Microsoft
-- Docker for containerization
-- Redis for caching excellence
+- Docker for secure containerization
+- Redis for high-performance caching
 
 ---
 
@@ -781,14 +836,17 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 For issues and questions:
 - Open an issue on GitHub
-- Email: support@skillnest.dev
+- Check the [CONTRIBUTING.md](CONTRIBUTING.md) file
+- Review [troubleshooting](#-troubleshooting) section
 
 ---
 
 <div align="center">
 
-**Built with ❤️ by distributed systems architects**
+**Built with ❤️ using Java Spring Boot & SvelteKit**
 
 ⭐ Star this repository if you find it helpful!
+
+Powered by Spring Boot • PostgreSQL • Docker • Redis
 
 </div>
