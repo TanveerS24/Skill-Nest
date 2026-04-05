@@ -21,5 +21,6 @@ public class TestCaseDto {
     @NotBlank(message = "Expected output cannot be blank")
     private String expectedOutput;
     
+    @Builder.Default
     private Boolean isHidden = false;
 }

@@ -38,9 +38,11 @@ public class Problem {
     private Difficulty difficulty;
     
     @Column(nullable = false)
+    @Builder.Default
     private Integer timeLimit = 5; // seconds
     
     @Column(nullable = false)
+    @Builder.Default
     private Integer memoryLimit = 256; // MB
     
     @Column(nullable = false, updatable = false)

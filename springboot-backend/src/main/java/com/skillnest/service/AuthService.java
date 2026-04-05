@@ -94,7 +94,13 @@ public class AuthService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
     
-    private UserResponseDto mapToDto(User user) {
+    public UserResponseDto getCurrentUserDto(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        return mapToDto(user);
+    }
+    
+    public UserResponseDto mapToDto(User user) {
         return UserResponseDto.builder()
                 .id(user.getId())
                 .email(user.getEmail())

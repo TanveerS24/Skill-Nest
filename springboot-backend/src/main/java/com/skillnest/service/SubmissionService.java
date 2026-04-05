@@ -9,8 +9,6 @@ import com.skillnest.repository.SubmissionRepository;
 import com.skillnest.repository.TestCaseRepository;
 import com.skillnest.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;

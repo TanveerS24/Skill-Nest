@@ -32,5 +32,6 @@ public class TestCase {
     private String expectedOutput;
     
     @Column(nullable = false)
+    @Builder.Default
     private Boolean isHidden = false;
 }

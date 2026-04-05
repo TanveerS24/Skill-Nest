@@ -29,9 +29,11 @@ public class ProblemCreateDto {
     private Difficulty difficulty;
     
     @Min(value = 1, message = "Time limit must be at least 1 second")
+    @Builder.Default
     private Integer timeLimit = 5;
     
     @Min(value = 1, message = "Memory limit must be at least 1 MB")
+    @Builder.Default
     private Integer memoryLimit = 256;
     
     @Valid

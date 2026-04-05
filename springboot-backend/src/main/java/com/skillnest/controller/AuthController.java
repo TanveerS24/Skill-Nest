@@ -8,6 +8,8 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -36,5 +38,12 @@ public class AuthController {
         String token = refreshToken.replace("Bearer ", "");
         Map<String, Object> result = authService.refreshAccessToken(token);
         return ResponseEntity.ok(result);
+    }
+    
+    @GetMapping("/me")
+    public ResponseEntity<UserResponseDto> getCurrentUser(@AuthenticationPrincipal UserDetails userDetails) {
+        String email = userDetails.getUsername();
+        UserResponseDto user = authService.getCurrentUserDto(email);
+        return ResponseEntity.ok(user);
     }
 }

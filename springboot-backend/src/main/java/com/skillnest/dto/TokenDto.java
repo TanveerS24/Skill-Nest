@@ -12,5 +12,9 @@ import lombok.NoArgsConstructor;
 public class TokenDto {
     
     private String accessToken;
+    @Builder.Default
     private String tokenType = "Bearer";
+    
+    @Builder.Default
+    private Long expiresIn = 3600L;
 }

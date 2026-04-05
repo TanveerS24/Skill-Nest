@@ -1,5 +1,6 @@
 com\skillnest\dto\TokenDto.class
 com\skillnest\service\ProblemService.class
+com\skillnest\service\LeaderboardService.class
 com\skillnest\controller\AuthController.class
 com\skillnest\entity\Submission.class
 com\skillnest\service\LeaderboardEntryDto$LeaderboardEntryDtoBuilder.class
@@ -15,6 +16,7 @@ com\skillnest\security\JwtProvider.class
 com\skillnest\dto\UserCreateDto$UserCreateDtoBuilder.class
 com\skillnest\controller\SubmissionController.class
 com\skillnest\dto\SubmissionResponseDto$SubmissionResponseDtoBuilder.class
+com\skillnest\exception\ErrorResponse.class
 com\skillnest\dto\TestCaseDto.class
 com\skillnest\dto\UserLoginDto$UserLoginDtoBuilder.class
 com\skillnest\entity\TestCase$TestCaseBuilder.class
@@ -24,6 +26,7 @@ com\skillnest\service\ExecutionResult.class
 com\skillnest\entity\UserRole.class
 com\skillnest\controller\ProblemController.class
 com\skillnest\entity\Language.class
+com\skillnest\exception\GlobalExceptionHandler.class
 com\skillnest\controller\AdminController.class
 com\skillnest\service\CodeExecutionService.class
 com\skillnest\dto\SubmissionResponseDto.class
@@ -40,6 +43,7 @@ com\skillnest\entity\Submission$SubmissionBuilder.class
 com\skillnest\config\CorsConfig.class
 com\skillnest\entity\Problem$ProblemBuilder.class
 com\skillnest\dto\ProblemResponseDto.class
+com\skillnest\exception\ErrorResponse$ErrorResponseBuilder.class
 com\skillnest\dto\UserCreateDto.class
 com\skillnest\security\JwtAuthenticationFilter.class
 com\skillnest\dto\UserResponseDto.class
@@ -56,4 +60,5 @@ com\skillnest\repository\SubmissionRepository.class
 com\skillnest\security\JwtAuthenticationEntryPoint.class
 com\skillnest\exception\ResourceNotFoundException.class
 com\skillnest\dto\ProblemDetailDto.class
+com\skillnest\service\SubmissionService.class
 com\skillnest\repository\UserRepository.class
