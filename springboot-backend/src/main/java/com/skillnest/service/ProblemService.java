@@ -132,7 +132,8 @@ public class ProblemService {
         return mapToDto(updatedProblem);
     }
     
-    public void deleteProblem(Long problemId) {
+    @SuppressWarnings("null")
+public void deleteProblem(Long problemId) {
         Problem problem = problemRepository.findById(problemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Problem not found"));
         problemRepository.delete(problem);
