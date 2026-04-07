@@ -54,8 +54,6 @@ declare module '$env/static/private' {
 	export const DriverData: string;
 	export const EDITOR: string;
 	export const EnableLog: string;
-	export const FPS_BROWSER_APP_PROFILE_STRING: string;
-	export const FPS_BROWSER_USER_PROFILE_STRING: string;
 	export const GIT_ASKPASS: string;
 	export const HOME: string;
 	export const HOMEDRIVE: string;
@@ -117,6 +115,7 @@ declare module '$env/static/private' {
 	export const VSCODE_GIT_ASKPASS_NODE: string;
 	export const VSCODE_GIT_IPC_HANDLE: string;
 	export const VSCODE_INJECTION: string;
+	export const VSCODE_JAVA_EXEC: string;
 	export const VSCODE_JDWP_ADAPTER_ENDPOINTS: string;
 	export const VSCODE_PYTHON_AUTOACTIVATE_GUARD: string;
 	export const windir: string;
@@ -222,8 +221,6 @@ declare module '$env/dynamic/private' {
 		DriverData: string;
 		EDITOR: string;
 		EnableLog: string;
-		FPS_BROWSER_APP_PROFILE_STRING: string;
-		FPS_BROWSER_USER_PROFILE_STRING: string;
 		GIT_ASKPASS: string;
 		HOME: string;
 		HOMEDRIVE: string;
@@ -285,6 +282,7 @@ declare module '$env/dynamic/private' {
 		VSCODE_GIT_ASKPASS_NODE: string;
 		VSCODE_GIT_IPC_HANDLE: string;
 		VSCODE_INJECTION: string;
+		VSCODE_JAVA_EXEC: string;
 		VSCODE_JDWP_ADAPTER_ENDPOINTS: string;
 		VSCODE_PYTHON_AUTOACTIVATE_GUARD: string;
 		windir: string;

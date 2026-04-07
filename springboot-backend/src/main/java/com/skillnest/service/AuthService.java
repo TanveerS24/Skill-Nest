@@ -30,6 +30,7 @@ public class AuthService {
     @Autowired
     private JwtProvider jwtProvider;
     
+    @SuppressWarnings("null")
     public UserResponseDto register(UserCreateDto userCreateDto) {
         if (userRepository.existsByEmail(userCreateDto.getEmail())) {
             throw new ResourceAlreadyExistsException("Email already registered");
