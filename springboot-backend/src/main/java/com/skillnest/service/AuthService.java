@@ -48,19 +48,21 @@ public class AuthService {
     
     public Map<String, Object> login(UserLoginDto userLoginDto) {
         User user = userRepository.findByEmail(userLoginDto.getEmail())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        
-        if (!passwordEncoder.matches(userLoginDto.getPassword(), user.getPassword())) {
-            throw new ResourceNotFoundException("Invalid credentials");
+                .orElse(null);
+
+        if (user == null || !passwordEncoder.matches(userLoginDto.getPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("Invalid email or password");
         }
         
         String accessToken = jwtProvider.generateAccessToken(
                 user.getId().toString(),
+                user.getEmail(),
                 user.getRole().name()
         );
-        
+
         String refreshToken = jwtProvider.generateRefreshToken(
                 user.getId().toString(),
+                user.getEmail(),
                 user.getRole().name()
         );
         
@@ -79,9 +81,10 @@ public class AuthService {
         }
         
         String userId = jwtProvider.getUserIdFromJWT(refreshToken);
+        String email = jwtProvider.getEmailFromJWT(refreshToken);
         String role = jwtProvider.getRoleFromJWT(refreshToken);
         
-        String newAccessToken = jwtProvider.generateAccessToken(userId, role);
+        String newAccessToken = jwtProvider.generateAccessToken(userId, email, role);
         
         Map<String, Object> response = new HashMap<>();
         response.put("accessToken", newAccessToken);

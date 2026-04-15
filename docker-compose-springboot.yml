@@ -66,14 +66,65 @@ services:
       - "3000:5173"
     environment:
       VITE_API_URL: http://localhost:8080/api
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
     depends_on:
       - backend
+    networks:
+      - skillnest-network
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: skillnest-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h
+    networks:
+      - skillnest-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: skillnest-ai-service
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://skillnest:skillnest@postgres:5432/skillnest
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      OLLAMA_BASE_URL: http://ollama:11434
+      OLLAMA_MODEL: llama3.1:8b
+      CHROMADB_PATH: /app/chroma_db
+      EXECUTION_TIMEOUT: 2
+      DEBUG: false
+    volumes:
+      - chroma_data:/app/chroma_db
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
     networks:
       - skillnest-network
 
 volumes:
   postgres_data:
   redis_data:
+  ollama_data:
+  chroma_data:
 
 networks:
   skillnest-network:

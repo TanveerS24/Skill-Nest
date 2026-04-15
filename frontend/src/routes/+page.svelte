@@ -4,13 +4,13 @@
 	import { goto } from '$app/navigation';
 
 	let stats = {
-		totalProblems: 6,
+		totalProblems: 0,
 		totalUsers: 0,
-		totalSubmissions: 0
+		totalSubmissions: 10
 	};
 
 	onMount(async () => {
-		// Fetch stats if needed
+		// Fetch stats
 	});
 </script>
 

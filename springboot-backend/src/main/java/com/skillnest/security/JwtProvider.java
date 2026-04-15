@@ -25,20 +25,21 @@ public class JwtProvider {
         return Keys.hmacShaKeyFor(jwtSecret.getBytes());
     }
     
-    public String generateAccessToken(String subject, String role) {
-        return createToken(subject, role, accessTokenExpiration);
+    public String generateAccessToken(String subject, String email, String role) {
+        return createToken(subject, email, role, accessTokenExpiration);
     }
-    
-    public String generateRefreshToken(String subject, String role) {
-        return createToken(subject, role, refreshTokenExpiration);
+
+    public String generateRefreshToken(String subject, String email, String role) {
+        return createToken(subject, email, role, refreshTokenExpiration);
     }
-    
-    private String createToken(String subject, String role, long expirationMs) {
+
+    private String createToken(String subject, String email, String role, long expirationMs) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expirationMs);
-        
+
         return Jwts.builder()
                 .subject(subject)
+                .claim("email", email)
                 .claim("role", role)
                 .issuedAt(now)
                 .expiration(expiryDate)
@@ -54,6 +55,11 @@ public class JwtProvider {
     public String getRoleFromJWT(String token) {
         Claims claims = getAllClaimsFromToken(token);
         return (String) claims.get("role");
+    }
+
+    public String getEmailFromJWT(String token) {
+        Claims claims = getAllClaimsFromToken(token);
+        return (String) claims.get("email");
     }
     
     public boolean validateToken(String token) {
