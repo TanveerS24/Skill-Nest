@@ -39,6 +39,9 @@ public class SubmissionService {
     private CodeExecutionService codeExecutionService;
     
     @Autowired
+    private HybridLoadBalancerService hybridLoadBalancerService;
+    
+    @Autowired
     private RedisTemplate<String, Object> redisTemplate;
     
     public SubmissionResponseDto submitCode(Long userId, SubmissionCreateDto submissionCreateDto) {
@@ -57,7 +60,7 @@ public class SubmissionService {
         Double maxMemory = 0.0;
         
         for (TestCase testCase : testCases) {
-            ExecutionResult result = codeExecutionService.executeCode(
+            ExecutionResult result = hybridLoadBalancerService.executeWithLoadBalancing(
                     submissionCreateDto.getCode(),
                     submissionCreateDto.getLanguage(),
                     testCase.getInput(),

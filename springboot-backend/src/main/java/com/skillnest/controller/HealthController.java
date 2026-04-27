@@ -18,4 +18,13 @@ public class HealthController {
         response.put("version", "1.0.0");
         return ResponseEntity.ok(response);
     }
+    
+    @GetMapping("/health")
+    public ResponseEntity<Map<String, Object>> healthCheck() {
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", "UP");
+        response.put("service", "SkillNest Backend");
+        response.put("timestamp", System.currentTimeMillis());
+        return ResponseEntity.ok(response);
+    }
 }

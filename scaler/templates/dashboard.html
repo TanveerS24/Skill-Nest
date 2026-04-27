@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillNest Auto-Scaler Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        .cpu-bar {
+            transition: width 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-blue-400">SkillNest Auto-Scaler</h1>
+                <p class="text-gray-400 mt-1">Process-aware horizontal auto-scaling dashboard</p>
+            </div>
+            <div class="flex items-center gap-4">
+                <div id="last-updated" class="text-sm text-gray-400">Last updated: --</div>
+                <button onclick="refreshData()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition">
+                    Refresh
+                </button>
+            </div>
+        </div>
+
+        <!-- Service Cards -->
+        <div id="services-container" class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <!-- Service cards will be injected here -->
+        </div>
+
+        <!-- Scale Events Log -->
+        <div class="bg-gray-800 rounded-xl p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4 text-blue-400">Scale Event Log</h2>
+            <div id="events-log" class="space-y-2 max-h-64 overflow-y-auto">
+                <!-- Events will be injected here -->
+            </div>
+        </div>
+
+        <!-- Manual Controls -->
+        <div class="bg-gray-800 rounded-xl p-6">
+            <h2 class="text-xl font-semibold mb-4 text-blue-400">Manual Override Controls</h2>
+            <div id="manual-controls" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Controls will be injected here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/scaler/status';
+        let refreshInterval;
+
+        async function fetchData() {
+            try {
+                const response = await fetch(API_URL);
+                const data = await response.json();
+                updateDashboard(data);
+                document.getElementById('last-updated').textContent = 
+                    `Last updated: ${new Date(data.timestamp).toLocaleTimeString()}`;
+            } catch (error) {
+                console.error('Failed to fetch data:', error);
+            }
+        }
+
+        function updateDashboard(data) {
+            renderServiceCards(data.services, data.recommended_actions);
+            renderScaleEvents(data.scale_events);
+            renderManualControls(data.services);
+        }
+
+        function renderServiceCards(services, recommendedActions) {
+            const container = document.getElementById('services-container');
+            container.innerHTML = '';
+
+            for (const [serviceName, serviceData] of Object.entries(services)) {
+                const card = document.createElement('div');
+                card.className = 'bg-gray-800 rounded-xl p-6 border border-gray-700';
+                
+                const recommendedAction = recommendedActions[serviceName];
+                const actionColors = {
+                    'scale_up': 'text-green-400',
+                    'scale_down': 'text-yellow-400',
+                    'no_action': 'text-gray-400',
+                    'frozen': 'text-red-400',
+                    'cooldown': 'text-blue-400',
+                    'at_max': 'text-red-400',
+                    'at_min': 'text-yellow-400'
+                };
+
+                let instancesHtml = '';
+                if (serviceData.instances.length === 0) {
+                    instancesHtml = '<p class="text-gray-500 text-sm">No instances running</p>';
+                } else {
+                    instancesHtml = serviceData.instances.map(inst => {
+                        const cpuColor = inst.cpu_percent > 70 ? 'bg-red-500' : 
+                                        inst.cpu_percent > 50 ? 'bg-yellow-500' : 'bg-green-500';
+                        const overloadClass = inst.is_overloaded ? 'border-red-500 border-2' : 'border-gray-600 border';
+                        
+                        return `
+                            <div class="bg-gray-700 rounded-lg p-3 mb-2 ${overloadClass}">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-xs text-gray-400 font-mono">${inst.container_id}</span>
+                                    <span class="text-xs ${inst.is_overloaded ? 'text-red-400 pulse' : 'text-green-400'}">
+                                        ${inst.is_overloaded ? 'OVERLOAD' : 'OK'}
+                                    </span>
+                                </div>
+                                <div class="mb-2">
+                                    <div class="flex justify-between text-xs mb-1">
+                                        <span>CPU</span>
+                                        <span>${inst.cpu_percent.toFixed(1)}%</span>
+                                    </div>
+                                    <div class="w-full bg-gray-600 rounded-full h-2">
+                                        <div class="cpu-bar ${cpuColor} h-2 rounded-full" style="width: ${Math.min(inst.cpu_percent, 100)}%"></div>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-3 gap-2 text-xs">
+                                    <div>
+                                        <span class="text-gray-400">Mem</span>
+                                        <p class="font-mono">${(inst.memory_mb).toFixed(0)}MB</p>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-400">Procs</span>
+                                        <p class="font-mono">${inst.process_count}</p>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-400">Queue</span>
+                                        <p class="font-mono">${inst.queue_depth}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="text-lg font-semibold capitalize">${serviceName}</h3>
+                            <p class="text-sm text-gray-400">
+                                ${serviceData.instance_count} instances 
+                                (min: ${serviceData.min_instances}, max: ${serviceData.max_instances})
+                            </p>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs ${actionColors[recommendedAction] || 'text-gray-400'}">
+                                ${recommendedAction.toUpperCase().replace('_', ' ')}
+                            </span>
+                            ${serviceData.is_frozen ? '<span class="ml-2 text-xs text-red-400">❄️ FROZEN</span>' : ''}
+                        </div>
+                    </div>
+                    
+                    ${serviceName === 'springboot' ? `
+                    <div class="mb-4 p-2 bg-gray-700 rounded text-xs">
+                        <span class="text-gray-400">Redis Cache Hit Rate:</span>
+                        <span class="ml-2 ${serviceData.redis_cache_hit_rate > 80 ? 'text-green-400' : 'text-yellow-400'}">
+                            ${serviceData.redis_cache_hit_rate.toFixed(1)}%
+                        </span>
+                    </div>
+                    ` : ''}
+                    
+                    ${serviceName === 'executor' ? `
+                    <div class="mb-4 p-2 bg-gray-700 rounded text-xs">
+                        <span class="text-gray-400">Max Submission RPS:</span>
+                        <span class="ml-2 text-blue-400">${serviceData.max_submission_rps.toFixed(1)}</span>
+                        <span class="text-gray-400 ml-2">(Active Users: ${serviceData.active_users})</span>
+                    </div>
+                    ` : ''}
+                    
+                    <div class="max-h-64 overflow-y-auto">
+                        ${instancesHtml}
+                    </div>
+                    
+                    ${serviceData.last_scale_time ? `
+                    <div class="mt-4 pt-4 border-t border-gray-700 text-xs text-gray-400">
+                        Last scale: ${serviceData.last_scale_action?.toUpperCase() || 'N/A'} at 
+                        ${new Date(serviceData.last_scale_time).toLocaleTimeString()}
+                        ${serviceData.cooldown_until && new Date(serviceData.cooldown_until) > new Date() ? 
+                            `(cooldown until ${new Date(serviceData.cooldown_until).toLocaleTimeString()})` : ''}
+                    </div>
+                    ` : ''}
+                `;
+
+                container.appendChild(card);
+            }
+        }
+
+        function renderScaleEvents(events) {
+            const container = document.getElementById('events-log');
+            
+            if (events.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-sm">No scale events recorded</p>';
+                return;
+            }
+
+            container.innerHTML = events.map(event => {
+                const actionColor = event.action === 'scale_up' ? 'text-green-400' : 'text-yellow-400';
+                const actionIcon = event.action === 'scale_up' ? '⬆️' : '⬇️';
+                
+                return `
+                    <div class="flex items-center justify-between p-2 bg-gray-700 rounded text-sm">
+                        <div class="flex items-center gap-3">
+                            <span>${actionIcon}</span>
+                            <span class="capitalize text-blue-400">${event.service}</span>
+                            <span class="${actionColor}">${event.action.replace('_', ' ').toUpperCase()}</span>
+                            <span class="text-gray-400">${event.instance_count_before} → ${event.instance_count_after}</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-gray-400 text-xs">${new Date(event.timestamp).toLocaleString()}</span>
+                            <p class="text-gray-500 text-xs">${event.reason}</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderManualControls(services) {
+            const container = document.getElementById('manual-controls');
+            container.innerHTML = '';
+
+            for (const [serviceName, serviceData] of Object.entries(services)) {
+                const control = document.createElement('div');
+                control.className = 'bg-gray-700 rounded-lg p-4';
+                
+                control.innerHTML = `
+                    <h4 class="font-semibold capitalize mb-3">${serviceName}</h4>
+                    <div class="flex gap-2">
+                        <button onclick="manualScale('${serviceName}', 'scale_up')" 
+                                class="flex-1 bg-green-600 hover:bg-green-700 px-3 py-2 rounded text-sm transition"
+                                ${serviceData.instance_count >= serviceData.max_instances ? 'disabled' : ''}>
+                            ⬆️ Scale Up
+                        </button>
+                        <button onclick="manualScale('${serviceName}', 'scale_down')" 
+                                class="flex-1 bg-yellow-600 hover:bg-yellow-700 px-3 py-2 rounded text-sm transition"
+                                ${serviceData.instance_count <= serviceData.min_instances ? 'disabled' : ''}>
+                            ⬇️ Scale Down
+                        </button>
+                        <button onclick="manualScale('${serviceName}', '${serviceData.is_frozen ? 'unfreeze' : 'freeze'}')" 
+                                class="flex-1 ${serviceData.is_frozen ? 'bg-blue-600 hover:bg-blue-700' : 'bg-red-600 hover:bg-red-700'} px-3 py-2 rounded text-sm transition">
+                            ${serviceData.is_frozen ? '🔓 Unfreeze' : '❄️ Freeze'}
+                        </button>
+                    </div>
+                `;
+                
+                container.appendChild(control);
+            }
+        }
+
+        async function manualScale(service, action) {
+            try {
+                const response = await fetch('/scaler/scale', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ service, action })
+                });
+                
+                if (response.ok) {
+                    refreshData();
+                } else {
+                    alert('Failed to execute manual scale');
+                }
+            } catch (error) {
+                console.error('Manual scale failed:', error);
+                alert('Failed to execute manual scale');
+            }
+        }
+
+        function refreshData() {
+            fetchData();
+        }
+
+        // Initial load
+        fetchData();
+        
+        // Auto-refresh every 2 seconds
+        refreshInterval = setInterval(fetchData, 2000);
+    </script>
+</body>
+</html>

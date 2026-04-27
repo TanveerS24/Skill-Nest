@@ -1,0 +1,139 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: skillnest-postgres
+    environment:
+      POSTGRES_DB: skillnest
+      POSTGRES_USER: skillnest
+      POSTGRES_PASSWORD: skillnest
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U skillnest"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - skillnest-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: skillnest-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - skillnest-network
+
+  backend-1:
+    build:
+      context: ./springboot-backend
+      dockerfile: Dockerfile
+    container_name: skillnest-backend-1
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/skillnest
+      SPRING_DATASOURCE_USERNAME: skillnest
+      SPRING_DATASOURCE_PASSWORD: skillnest
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-in-production}
+      LOADBALANCER_ENABLED: "true"
+      LOADBALANCER_INSTANCES_0: http://backend-1:8080
+      LOADBALANCER_INSTANCES_1: http://backend-2:8080
+      LOADBALANCER_INSTANCES_2: http://backend-3:8080
+    ports:
+      - "8081:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - skillnest-network
+
+  backend-2:
+    build:
+      context: ./springboot-backend
+      dockerfile: Dockerfile
+    container_name: skillnest-backend-2
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/skillnest
+      SPRING_DATASOURCE_USERNAME: skillnest
+      SPRING_DATASOURCE_PASSWORD: skillnest
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-in-production}
+      LOADBALANCER_ENABLED: "true"
+      LOADBALANCER_INSTANCES_0: http://backend-1:8080
+      LOADBALANCER_INSTANCES_1: http://backend-2:8080
+      LOADBALANCER_INSTANCES_2: http://backend-3:8080
+    ports:
+      - "8082:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - skillnest-network
+
+  backend-3:
+    build:
+      context: ./springboot-backend
+      dockerfile: Dockerfile
+    container_name: skillnest-backend-3
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/skillnest
+      SPRING_DATASOURCE_USERNAME: skillnest
+      SPRING_DATASOURCE_PASSWORD: skillnest
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-in-production}
+      LOADBALANCER_ENABLED: "true"
+      LOADBALANCER_INSTANCES_0: http://backend-1:8080
+      LOADBALANCER_INSTANCES_1: http://backend-2:8080
+      LOADBALANCER_INSTANCES_2: http://backend-3:8080
+    ports:
+      - "8083:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - skillnest-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: skillnest-frontend
+    ports:
+      - "3000:5173"
+    environment:
+      VITE_API_URL: http://localhost:8081/api,mijkmj
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend-1
+    networks:
+      - skillnest-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  skillnest-network:
+    driver: bridge
